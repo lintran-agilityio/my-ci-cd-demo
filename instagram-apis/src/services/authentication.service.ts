@@ -1,5 +1,5 @@
 // libs
-import { compare } from "bcrypt";
+import { compare, genSalt, hash } from "bcrypt";
 
 import { User } from "@/models";
 import { omitFields } from "@/utils";
@@ -16,7 +16,10 @@ class AuthenticationService {
         const params = { ...payload };
 
         try {
-            const user = await User.create(params);
+            const salt = await genSalt(10);
+            const hashedPassword = await hash(params.password, salt);
+
+            const user = await User.create({ ...params, password: hashedPassword });
 
             return omitFields(user, 'password');
         } catch (error) {
@@ -29,7 +32,7 @@ class AuthenticationService {
 
         try {
             const user = await User.findOne({ where: { email: params.email } });
-
+            
             if (!user) return null;
 
             const isValidPassword = await compare(params.password, user.password);
