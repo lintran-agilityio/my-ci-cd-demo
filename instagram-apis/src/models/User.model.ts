@@ -4,13 +4,19 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../configs/database";
 
 interface UserAttributes {
-    user_id?: number;
+    user_id: number;
     email: string;
     password: string;
     username: string;
 }
 
-export class User extends Model<UserAttributes> implements UserAttributes {
+interface UserCreationAttributes {
+    email: string;
+    password: string;
+    username: string;
+}
+
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
     public user_id!: number;
     public email!: string;
     public password!: string;

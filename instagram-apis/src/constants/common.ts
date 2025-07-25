@@ -32,3 +32,10 @@ export const API_ENPOINTS = {
 export const ROUTES = {
     BASE: '/',
 };
+
+export const PAGINATION = {
+    DEFAULT: {
+        LIMIT: 10,
+        OFFSET: 0
+    }  
+};
