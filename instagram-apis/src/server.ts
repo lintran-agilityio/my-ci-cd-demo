@@ -5,13 +5,13 @@ import express, { Request, Response, NextFunction } from 'express';
 import { logger } from '@/utils';
 import { sequelize } from '@/configs';
 import { PORT } from '@/constants';
-import { authenticationRouter } from '@/routes';
+import { authenticationRouter, userRouter } from '@/routes';
 import app from './app';
 
-sequelize.sync({ force: true }).then(() => {
-    console.log('Database & tables created!');
+sequelize.sync({ alter: true }).then(() => {
+    console.log('Database & tables synced!');
 }).catch((error) => {
-    console.log('Error creating database & tables:', error);
+    console.log('Error syncing database & tables:', error);
 });
 
 app.get('/', (req: Request, res: Response) => {
@@ -20,6 +20,7 @@ app.get('/', (req: Request, res: Response) => {
 
 // All routers
 authenticationRouter(app);
+userRouter(app);
 
 
 export const startServer = () => {

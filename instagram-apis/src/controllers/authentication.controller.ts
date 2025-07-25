@@ -7,7 +7,7 @@ import { authenticationService } from '@/services';
 
 class AuthenticationController {
 
-    async register(req: Request, res: Response) {
+    register = async (req: Request, res: Response) => {
         const params = req.body;
 
         try {
@@ -24,9 +24,9 @@ class AuthenticationController {
         } catch (error) {
             return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
         }
-    }
+    };
 
-    async login(req: Request, res: Response) {
+    login = async (req: Request, res: Response) => {
         const params = req.body;
 
         try {
@@ -35,6 +35,7 @@ class AuthenticationController {
             if (errors.length > 0) return res.status(STATUS_CODE.BAD_REQUEST).json({ errors });
 
             const dataRes = await authenticationService.loginUser(params);
+
             if (!dataRes) return res.status(STATUS_CODE.UNAUTHORIZED).json({ error: MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD });
 
             // generate token

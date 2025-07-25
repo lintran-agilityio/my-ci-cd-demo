@@ -6,5 +6,5 @@ import { authenticationControler } from '@/controllers';
 
 export const authenticationRouter = (app: Application) => {
     app.route(API_ENPOINTS.REGISTER).post(authenticationControler.register);
-    app.route(API_ENPOINTS.LOGIN).get(authenticationControler.login);
+    app.route(API_ENPOINTS.LOGIN).post(authenticationControler.login);
 };
