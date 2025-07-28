@@ -3,8 +3,8 @@ export const MESSAGES_VALIDATION = {
     REQUIRED_EMAIL_PASSWORD: 'Email and password are required',
     INVALID_FORMAT: 'This field is invalid format',
     PASSWORD_INVALID: 'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character',
-    PASSWORD_NOT_MATCH: 'Password and confirm password do not match',
     INVALID_USERNAME_PASSWORD: 'Username or password is invalid',
+    INVALID_EMAIL: 'Invalid email address',
 };
 
 export const MESSAGES_AUTHENTICATION = {
@@ -17,4 +17,10 @@ export const MESSAGES_AUTHENTICATION = {
     INTERNAL_SERVER_ERROR: 'Authentication faild',
     INVALID_TOKEN: 'Invalid token',
     INVALID_EMAIL_PASSWORD: 'Invalid email or password',
+    SUCCESSFUL: 'Success',
+};
+
+export const MESSAGES = {
+    BAD_REQUEST: 'Bad request',
+    NOT_FOUND: 'Not found'
 };

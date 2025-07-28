@@ -7,6 +7,7 @@ import { sequelize } from '@/configs';
 import { PORT } from '@/constants';
 import { authenticationRouter, userRouter } from '@/routes';
 import app from './app';
+import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handleError";
 
 sequelize.sync({ alter: true }).then(() => {
     console.log('Database & tables synced!');
@@ -22,6 +23,13 @@ app.get('/', (req: Request, res: Response) => {
 authenticationRouter(app);
 userRouter(app);
 
+/**
+ * Handle middleware with Top-down priority
+ * - Route not found errors (must come before error middleware)
+ * - General error handling middleware (must be last)
+ */
+app.use(handleNotFoundRoute);
+app.use(globalErrorMiddleware);
 
 export const startServer = () => {
     sequelize.sync().then(() => {

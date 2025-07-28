@@ -21,7 +21,7 @@ class AuthenticationService {
 
             const user = await User.create({ ...params, password: hashedPassword });
 
-            return omitFields(user, 'password');
+            return omitFields(user.toJSON(), 'password');
         } catch (error) {
             throw error;
         }
@@ -36,7 +36,7 @@ class AuthenticationService {
             if (!user) return null;
 
             const isValidPassword = await compare(params.password, user.password);
-            return isValidPassword ? omitFields(user, 'password') : null;
+            return isValidPassword ? omitFields(user.toJSON(), 'password') : null;
         } catch (error) {
             throw error;
         }
