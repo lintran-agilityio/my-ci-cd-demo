@@ -270,3 +270,71 @@
 [2025-07-25 18:12:23] INFO: Server is running on http://localhost:3001
 [2025-07-25 18:13:57] INFO: Server is running on http://localhost:3001
 [2025-07-25 18:14:15] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:28:54] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:54:20] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:57:07] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:57:54] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:58:14] INFO: Server is running on http://localhost:3001
+[2025-07-28 09:59:14] INFO: Server is running on http://localhost:3001
+[2025-07-28 17:49:56] INFO: Server is running on http://localhost:3001
+[2025-07-28 17:51:37] INFO: Server is running on http://localhost:3001
+[2025-07-28 17:56:13] INFO: Server is running on http://localhost:3001
+[2025-07-28 17:58:42] INFO: Server is running on http://localhost:3001
+[2025-07-28 17:58:54] ERROR: Non-Error thrown: {"name":"SequelizeValidationError","errors":[{"message":"Validation isEmail on email failed","type":"Validation error","path":"email","value":"lin+4","origin":"FUNCTION","instance":{"user_id":null,"email":"lin+4","password":"$2b$10$1gSqrZvXvwXxphZxhgFAhOLhbNVyrDHF1q7ZCDdFAVatuevjwxB9W","username":"lintran","updatedAt":"2025-07-28T10:58:54.686Z","createdAt":"2025-07-28T10:58:54.686Z"},"validatorKey":"isEmail","validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}],"original":{"validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}]}}]}
+[2025-07-28 18:00:13] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:00:42] ERROR: Non-Error thrown: {"name":"SequelizeValidationError","errors":[{"message":"Validation isEmail on email failed","type":"Validation error","path":"email","value":"lin+4","origin":"FUNCTION","instance":{"user_id":null,"email":"lin+4","password":"$2b$10$120DQHBPxoux0YkGnvpKquRIaler4e0h7x05RhS6I.AI1hLqr8FuC","username":"lintran","updatedAt":"2025-07-28T11:00:42.792Z","createdAt":"2025-07-28T11:00:42.792Z"},"validatorKey":"isEmail","validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}],"original":{"validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}]}}]}
+[2025-07-28 18:10:52] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:11:00] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:12:02] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:12:34] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:12:40] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:15:08] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:15:17] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:22:07] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:24:43] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:24:44] ERROR: Non-Error thrown: {"name":"SequelizeValidationError","errors":[{"message":"Validation isEmail on email failed","type":"Validation error","path":"email","value":"lin+4","origin":"FUNCTION","instance":{"user_id":null,"email":"lin+4","password":"$2b$10$04N8tngaUrIyKlisttngZOemy96nv25Ok3Y3G0cVmj0jxmWKizCNS","username":"lintran","updatedAt":"2025-07-28T11:24:44.097Z","createdAt":"2025-07-28T11:24:44.097Z"},"validatorKey":"isEmail","validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}],"original":{"validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}]}}]}
+[2025-07-28 18:25:30] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:25:33] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:25:34] ERROR: Non-Error thrown: {"name":"SequelizeValidationError","errors":[{"message":"Validation isEmail on email failed","type":"Validation error","path":"email","value":"lin+4","origin":"FUNCTION","instance":{"user_id":null,"email":"lin+4","password":"$2b$10$2FyZlsX07IuL2Q6jfb0qF.KSie6.0wBXAa4eASeEOe32HFLL.Z0lO","username":"lintran","updatedAt":"2025-07-28T11:25:34.640Z","createdAt":"2025-07-28T11:25:34.640Z"},"validatorKey":"isEmail","validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}],"original":{"validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}]}}]}
+[2025-07-28 18:26:25] ERROR: Non-Error thrown: {"name":"SequelizeValidationError","errors":[{"message":"Validation isEmail on email failed","type":"Validation error","path":"email","value":"lin+4","origin":"FUNCTION","instance":{"user_id":null,"email":"lin+4","password":"$2b$10$nzLUniS0TcMvLxbiehbAj.Z9iUtP6E0QUwDWD4wqUM.eb6BvhJzZW","username":"lintran","updatedAt":"2025-07-28T11:26:25.594Z","createdAt":"2025-07-28T11:26:25.594Z"},"validatorKey":"isEmail","validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}],"original":{"validatorName":"isEmail","validatorArgs":[{"allow_display_name":false,"allow_underscores":false,"require_display_name":false,"allow_utf8_local_part":true,"require_tld":true,"blacklisted_chars":"","ignore_max_length":false,"host_blacklist":[],"host_whitelist":[]}]}}]}
+[2025-07-28 18:27:30] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:30:21] ERROR: Validation error: Validation isEmail on email failed
+[2025-07-28 18:32:21] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:32:41] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:32:56] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:35:56] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:39:12] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:39:34] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:39:35] ERROR: Validation error: Validation isEmail on email failed
+[2025-07-28 18:39:43] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:39:45] ERROR: Validation error: Validation isEmail on email failed
+[2025-07-28 18:40:12] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:40:13] ERROR: Validation error: Validation isEmail on email failed
+[2025-07-28 18:40:37] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:43:16] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:44:54] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:44:56] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:45:12] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:45:14] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:45:24] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:47:13] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:47:15] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:47:18] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:47:45] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:48:03] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:50:53] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:53:00] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:53:07] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:53:59] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:54:32] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:54:54] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:55:33] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:58:04] INFO: Server is running on http://localhost:3001
+[2025-07-28 18:59:32] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:00:58] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:01:42] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:02:08] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:05:20] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:08:46] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:09:17] INFO: Server is running on http://localhost:3001
+[2025-07-28 19:09:43] INFO: Server is running on http://localhost:3001

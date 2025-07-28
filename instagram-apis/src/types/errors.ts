@@ -12,3 +12,7 @@ export interface IErrorMessages {
     message: string;
     status: number;
 };
+
+export interface IErrorWithStatus extends Error {
+    statusCode: number;
+}

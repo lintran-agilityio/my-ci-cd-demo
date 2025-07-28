@@ -20,13 +20,17 @@ export const STATUS_CODE = {
     INTERNAL_SERVER_ERROR: 500,
 };
 
+const API_PREFIX = '/api/v1';
+
 export const API_ENPOINTS = {
-    REGISTER: '/api/v1/register',
-    LOGIN: '/api/v1/login',
-    GET_USERS: '/api/v1/users',
-    GET_USER_BY_ID: '/api/v1/user',
-    DELETE_USERS: '/api/v1/users',
-    DELETE_USER_BY_ID: '/api/v1/users'
+    REGISTER: `${API_PREFIX}/register`,
+    LOGIN: `${API_PREFIX}/login`,
+    USERS: `${API_PREFIX}/users`,
+    USER_DETAIL: `${API_PREFIX}users/:id`,
+    POSTS: `${API_PREFIX}/posts`,
+    POST_DETAIL: `${API_PREFIX}/posts/:id`,
+    COMMENTS: `${API_PREFIX}/comments`,
+    COMMENTS_DETAIL: `${API_PREFIX}/comments/:id`,
 };
 
 export const ROUTES = {
