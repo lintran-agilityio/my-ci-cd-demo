@@ -12,7 +12,7 @@ class UserServices {
             });
 
             const resFormatted = {
-                data: users.rows.map(user => omitFields(user, 'password')),
+                data: users.rows.map(user => omitFields(user.toJSON(), 'password')),
                 meta: {
                     pagination: {
                         limit: limitNumber,
