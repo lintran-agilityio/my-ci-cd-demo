@@ -5,7 +5,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { logger } from '@/utils';
 import { sequelize } from '@/configs';
 import { PORT } from '@/constants';
-import { authenticationRouter, userRouter } from '@/routes';
+import { apiDocsRouter, authenticationRouter, userRouter } from '@/routes';
 import app from './app';
 import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handleError";
 
@@ -18,6 +18,9 @@ sequelize.sync({ alter: true }).then(() => {
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, World! - Start doing working with Node.js and TypeScript');
 });
+
+// Api docs
+apiDocsRouter(app);
 
 // All routers
 authenticationRouter(app);

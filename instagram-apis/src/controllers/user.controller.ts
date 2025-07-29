@@ -7,7 +7,6 @@ import { STATUS_CODE } from "@/constants";
 class UsersController {
     async getUsers(req: Request, res: Response) {
         const { query = { offset: 0, limit: 0 } } = req;
-        console.log('query==>',query)
         const limitNumber = Number(query.limit) || 0;
         const offset = Number(query.offset) || 0;
 
@@ -16,7 +15,7 @@ class UsersController {
 
             return res.status(STATUS_CODE.OK).json({ data: dataRes });
         } catch (error) {
-            return res.status(STATUS_CODE.OK).json({ error });
+            return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
         }
     };
 };
