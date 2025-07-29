@@ -2,7 +2,7 @@
 import { compare, genSalt, hash } from "bcrypt";
 
 import { User } from "@/models";
-import { omitFields } from "@/utils";
+import { omitField } from "@/utils";
 import { IUserInfo, IUserLogin, IUserResponse } from "@/types";
 
 class AuthenticationService {
@@ -12,31 +12,29 @@ class AuthenticationService {
         return !!user;
     };
 
-    createUser = async (payload: IUserInfo) => {
-        const params = { ...payload };
-
+    create = async (payload: IUserInfo) => {
         try {
             const salt = await genSalt(10);
-            const hashedPassword = await hash(params.password, salt);
+            const hashedPassword = await hash(payload.password, salt);
 
-            const user = await User.create({ ...params, password: hashedPassword });
+            const user = await User.create({ ...payload, password: hashedPassword });
 
-            return omitFields(user.toJSON(), 'password');
+            return omitField(user.toJSON(), 'password');
         } catch (error) {
             throw error;
         }
     };
 
-    loginUser = async (payload: IUserLogin): Promise<IUserResponse | null> => {
-        const params = { ...payload };
+    login = async (payload: IUserLogin): Promise<IUserResponse | null> => {
+        const { email, password } = payload;
 
         try {
-            const user = await User.findOne({ where: { email: params.email } });
+            const user = await User.findOne({ where: { email } });
             
             if (!user) return null;
 
-            const isValidPassword = await compare(params.password, user.password);
-            return isValidPassword ? omitFields(user.toJSON(), 'password') : null;
+            const isValidPassword = await compare(password, user.password);
+            return isValidPassword ? omitField(user.toJSON(), 'password') : null;
         } catch (error) {
             throw error;
         }

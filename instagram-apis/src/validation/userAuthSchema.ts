@@ -19,5 +19,9 @@ export const registerSchema = z.object({
 		.regex(REGEX.PASSWORD, {
 			message: MESSAGES_VALIDATION.PASSWORD_INVALID
 		}),
-	username: z.string().min(1, { message: "Username is required" })
+	username: z
+		.string()
+		.regex(REGEX.NAME, {
+			message: MESSAGES_VALIDATION.REQUIRED
+		})
 });

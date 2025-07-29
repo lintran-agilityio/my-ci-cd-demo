@@ -8,10 +8,7 @@ import {
     logger,
     toError,
     globalErrorHandler,
-    loginSchema,
-    registerSchema
 } from '@/utils';
-import { validateRequestBody } from '@/middlewares/validate';
 
 class AuthenticationController {
 
@@ -19,15 +16,11 @@ class AuthenticationController {
         const params = req.body;
 
         try {
-            const errors = validateRequestBody(registerSchema, req);
-
-            if (errors) return res.status(STATUS_CODE.BAD_REQUEST).json({ errors });
-
             const hasExistUser = await authenticationService.isValidExistUser(params.email);
 
             if (hasExistUser) return next(globalErrorHandler(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.EXIST_USER));
 
-            const dataRes = await authenticationService.createUser(params);
+            const dataRes = await authenticationService.create(params);
 
             return res.status(STATUS_CODE.CREATED).json({ data: dataRes });
         } catch (error) {
@@ -41,16 +34,12 @@ class AuthenticationController {
         const params = req.body;
 
         try {
-            const errors = validateRequestBody(loginSchema, req);
-
-            if (errors) return res.status(STATUS_CODE.BAD_REQUEST).json({ errors });
-
-            const dataRes = await authenticationService.loginUser(params);
+            const dataRes = await authenticationService.login(params);
 
             if (!dataRes) return next(globalErrorHandler(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD));
 
             // generate token
-            const token = generateToken(dataRes);
+            const token = generateToken.accessToken(dataRes);
 
             return res.status(STATUS_CODE.OK).json({ data: { ...dataRes, token } });
         } catch (error) {
