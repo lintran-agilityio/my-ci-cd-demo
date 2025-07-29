@@ -3,6 +3,8 @@ import { Application } from 'express';
 
 import { API_ENPOINTS } from '@/constants';
 import { authenticationControler } from '@/controllers';
+import { validateRequest } from '@/middlewares/validate';
+import { registerSchema, loginSchema } from '@/validation';
 
 export const authenticationRouter = (app: Application) => {
 	/**
@@ -34,14 +36,16 @@ export const authenticationRouter = (app: Application) => {
 	 *     responses:
 	 *       201:
 	 *         description: User registered successfully
-	 * 			400:
-	 * 				description: Bad request
-	 * 			404:
-	 * 				description: Not found
-	 * 			500:
-	 * 				description: Server error
+	 *       400:
+	 *         description: Bad request
+	 *       404:
+	 *         description: Not found
+	 *       500:
+	 *         description: Server error
 	 */
-	app.route(API_ENPOINTS.REGISTER).post(authenticationControler.register);
+	app.post(API_ENPOINTS.REGISTER, validateRequest(registerSchema, 'body'), (req, res, next) => {
+		authenticationControler.register(req, res, next);
+	});
 
 	/**
 	 * @openapi
@@ -70,12 +74,14 @@ export const authenticationRouter = (app: Application) => {
 	 *         description: User logged successfully
 	 *       401:
 	 *         description: Invalid credentials
-	 * 			400:
-	 * 				description: Bad request
-	 * 			404:
-	 * 				description: Not found
-	 * 			500:
-	 * 				description: Server error
+	 *       400:
+	 *         description: Bad request
+	 *       404:
+	 *         description: Not found
+	 *       500:
+	 *         description: Server error
 	 */
-	app.route(API_ENPOINTS.LOGIN).post(authenticationControler.login);
+	app.post(API_ENPOINTS.LOGIN, validateRequest(loginSchema, 'body'), (req, res, next) => {
+		authenticationControler.login(req, res, next);
+	});
 };
