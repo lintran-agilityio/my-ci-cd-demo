@@ -5,9 +5,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import { logger } from '@/utils';
 import { sequelize } from '@/configs';
 import { PORT } from '@/constants';
-import { apiDocsRouter, authenticationRouter, userRouter } from '@/routes';
+import routes from '@/routes';
+import { apiDocsRouter } from '@/routes/api-doc.route';
 import app from './app';
-import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handleError";
+import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handle-error.middleware";
 
 sequelize.sync({ alter: true }).then(() => {
     console.log('Database & tables synced!');
@@ -22,9 +23,7 @@ app.get('/', (req: Request, res: Response) => {
 // Api docs
 apiDocsRouter(app);
 
-// All routers
-authenticationRouter(app);
-userRouter(app);
+routes(app);
 
 /**
  * Handle middleware with Top-down priority
