@@ -5,6 +5,7 @@ export const MESSAGES_VALIDATION = {
     PASSWORD_INVALID: 'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character',
     INVALID_USERNAME_PASSWORD: 'Username or password is invalid',
     INVALID_EMAIL: 'Invalid email address',
+    INVALID_ID: 'ID must be a positive integer',
 };
 
 export const MESSAGES_AUTHENTICATION = {
@@ -22,5 +23,10 @@ export const MESSAGES_AUTHENTICATION = {
 
 export const MESSAGES = {
     BAD_REQUEST: 'Bad request',
-    NOT_FOUND: 'Not found'
+    NOT_FOUND: 'Not found',
+    SUCCESS: {
+        DELETE: 'Delete success',
+        UPDATE: 'Update success',
+        ADD: 'Add success'
+    }
 };

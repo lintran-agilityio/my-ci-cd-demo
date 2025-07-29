@@ -1,32 +1,45 @@
 import { User } from "@/models";
-import { omitFields } from "@/utils";
+import { IUserResponse } from "@/types";
+import { findAllData, omitField } from "@/utils";
 
 class UserServices {
-    getUsers = async (offset: number, limitNumber: number) => {
-        try {
-            const users = await User.findAndCountAll({
-                limit: limitNumber,
-                offset,
-                order: [['createdAt', 'DESC']],
-                raw: true
-            });
+    getAll = async (offset: number, limit: number) => {
+      try {
+        return findAllData({
+          model: User,
+          offset,
+          limit,
+          order: ['createdAt', 'DESC'],
+          fieldOmit: "password"
+        });
+    } catch (error) {
+      throw error;
+    }
+  };
 
-            const resFormatted = {
-                data: users.rows.map(user => omitFields(user.toJSON(), 'password')),
-                meta: {
-                    pagination: {
-                        limit: limitNumber,
-                        offset,
-                        total: users.count
-                    }
-                } 
-            };
+  getUserById = async (userId: number) => {
+    try {
+      const res = await User.findByPk(userId);
+      return res ? omitField(res.toJSON(), 'password') : null;
+    } catch (error) {
+      throw error;
+    }
+  };
 
-            return resFormatted;
-        } catch (error) {
-            throw error;
-        }
-    };
+  updateUserById = async (userId: number, username: string, email: string) => {
+    const res = await User.update(
+      { username, email },
+      {
+        where: { user_id: userId }
+      }
+    );
+
+    return res[0];
+  };
+
+  deleteUserById = async (userId: number) => {
+    return await User.destroy({ where: { user_id: userId }});
+  }
 };
 
 export const userServices = new UserServices();
