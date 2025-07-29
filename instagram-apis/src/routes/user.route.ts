@@ -4,7 +4,7 @@ import { Application } from 'express';
 import { API_ENPOINTS } from '@/constants';
 import { userController } from '@/controllers';
 import { updateUserDetailSchema, userDetailSchema } from '@/validation';
-import { validateRequest } from '@/middlewares/validate';
+import { validateRequest } from '@/middlewares/validate-middleware';
 
 export const userRouter = (app: Application) => {
   /**

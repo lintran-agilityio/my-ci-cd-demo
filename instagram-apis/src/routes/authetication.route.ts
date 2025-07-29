@@ -3,7 +3,7 @@ import { Application } from 'express';
 
 import { API_ENPOINTS } from '@/constants';
 import { authenticationControler } from '@/controllers';
-import { validateRequest } from '@/middlewares/validate';
+import { validateRequest } from '@/middlewares/validate-middleware';
 import { registerSchema, loginSchema } from '@/validation';
 
 export const authenticationRouter = (app: Application) => {
