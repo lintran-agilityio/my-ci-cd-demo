@@ -4,7 +4,7 @@ import { Application } from 'express';
 import { API_ENPOINTS } from '@/constants';
 import { userController } from '@/controllers';
 import { updateUserDetailSchema, userDetailSchema } from '@/validation';
-import { validateRequest } from '@/middlewares/validate-middleware';
+import { validateRequest } from '@/middlewares/validate-request.middleware';
 
 export const userRouter = (app: Application) => {
   /**
@@ -35,17 +35,17 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.get(API_ENPOINTS.USERS, userController.getAll)
+  app.get(API_ENPOINTS.USERS, userController.getAll);
 
   /**
    * @openapi
-   * /api/v1/users/{user_id}:
+   * /api/v1/users/{userId}:
    *   get:
    *     summary: Get user by ID
    *     tags: [User Controller]
    *     parameters:
    *       - in: path
-   *         name: user_id
+   *         name: userId
    *         required: true
    *         schema:
    *           type: integer
@@ -76,13 +76,13 @@ export const userRouter = (app: Application) => {
 
   /**
    * @openapi
-   * /api/v1/users/{user_id}:
+   * /api/v1/users/{userId}:
    *   put:
    *     summary: Update user by ID
    *     tags: [User Controller]
    *     parameters:
    *       - in: path
-   *         name: user_id
+   *         name: userId
    *         required: true
    *         schema:
    *           type: integer
@@ -111,18 +111,18 @@ export const userRouter = (app: Application) => {
    *         description: Internal server error
    */
   app.put(API_ENPOINTS.USER_DETAIL, validateRequest(updateUserDetailSchema, 'body'), (req, res, next) => {
-      userController.updateUserById(req, res, next);
+    userController.updateUserById(req, res, next);
   });
 
   /**
    * @openapi
-   * /api/v1/users/{user_id}:
+   * /api/v1/users/{userId}:
    *   delete:
    *     summary: Delete user by ID
    *     tags: [User Controller]
    *     parameters:
    *       - in: path
-   *         name: user_id
+   *         name: userId
    *         required: true
    *         schema:
    *           type: integer

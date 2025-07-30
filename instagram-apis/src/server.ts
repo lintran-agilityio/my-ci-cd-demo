@@ -1,5 +1,5 @@
 // libs
-import express, { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 
 // utils
 import { logger } from '@/utils';
@@ -10,11 +10,6 @@ import { apiDocsRouter } from '@/routes/api-doc.route';
 import app from './app';
 import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handle-error.middleware";
 
-sequelize.sync({ alter: true }).then(() => {
-    console.log('Database & tables synced!');
-}).catch((error) => {
-    console.log('Error syncing database & tables:', error);
-});
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, World! - Start doing working with Node.js and TypeScript');

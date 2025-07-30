@@ -25,11 +25,11 @@ class UsersController {
   };
 
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const { user_id } = req.params;
+    const { userId } = req.params;
 
     try {
-      const userId = Number(user_id);
-      const dataRes = await userServices.getUserById(userId);
+      const userIdNumber = Number(userId);
+      const dataRes = await userServices.getUserById(userIdNumber);
         
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
@@ -42,13 +42,13 @@ class UsersController {
   };
 
   updateUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const { user_id } = req.params;
-    const { username, email } = req.body;
+    const { userId } = req.params;
+    const { username, email, isAdmin } = req.body;
 
     try {
-      const userId = Number(user_id);
+      const userIdNumber = Number(userId);
 
-      const dataRes = await userServices.updateUserById(userId, username, email);
+      const dataRes = await userServices.updateUserById(userIdNumber, username, email, isAdmin);
 
       if (dataRes === 0) return next(globalErrorHandler(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
       
@@ -56,18 +56,17 @@ class UsersController {
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
+      
       next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
-
-      return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
     }
   };
 
   deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const { user_id } = req.params;
+    const { userId } = req.params;
 
     try {
-      const userId = Number(user_id);
-      const dataRes = await userServices.deleteUserById(userId);
+      const userIdNumber = Number(userId);
+      const dataRes = await userServices.deleteUserById(userIdNumber);
 
       if (dataRes === 0) return next(globalErrorHandler(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
       
@@ -75,9 +74,8 @@ class UsersController {
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
-      next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
 
-      return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
+      next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 };

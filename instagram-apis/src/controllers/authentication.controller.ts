@@ -26,6 +26,7 @@ class AuthenticationController {
         } catch (error) {
             const { message } = toError(error);
             logger.error(message);
+
             next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
         }
     };
@@ -45,6 +46,7 @@ class AuthenticationController {
         } catch (error) {
             const { message } = toError(error);
             logger.error(message);
+            
             next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
         }
     }

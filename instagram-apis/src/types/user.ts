@@ -5,10 +5,11 @@ export interface IUserLogin {
 
 export interface IUserInfo extends IUserLogin {
     username: string;
+    isAdmin: boolean;
 };
 
 export interface IUser extends IUserInfo {
-    user_id: number;
+    userId: number;
 }
 
 export type IUserResponse = Omit<IUser, 'password'>;

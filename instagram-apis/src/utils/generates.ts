@@ -1,26 +1,40 @@
 import jwt from "jwt-simple";
 
 import { IUserResponse } from "@/types";
-import { JWT_SECRET, EXPIRES_TIME, REFRESH_EXPIRES_TIME, REFRESH_TOKEN_SECRET } from "@/constants";
+import { JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, REFRESH_TOKEN_SECRET } from "@/constants";
 import { configLogger } from "@/configs";
 
 export const generateToken = {
     accessToken: (user: IUserResponse) => {
-        const { user_id, email, username } = user;
-    
+        const { userId, email, username } = user;
+        // Calculate expiration time: 1 hour from now (in Unix timestamp)
+        const expirationTime = Math.floor(Date.now() / 1000) + (1 * 60 * 60); // 1 hour
+
         return jwt.encode(
-            { user_id, email, username, exp:  EXPIRES_TIME },
-            JWT_SECRET || configLogger.params.jwtSecret) || '';
+            { userId, email, username, exp: expirationTime },
+            JWT_SECRET || configLogger.params.jwtSecret
+        ) || '';
     },
 
     refreshToken: (user: IUserResponse) => {
-        const { user_id, email } = user;
+        const { userId } = user;
+        // Calculate refresh token expiration time: 30 days from now (in Unix timestamp)
+        const refreshExpirationTime = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days
+
         const refereshPayload = {
-            sub: user_id,
+            sub: userId,
             type: 'refresh',
-            exp: REFRESH_EXPIRES_TIME
+            exp: refreshExpirationTime
         };
 
         return jwt.encode(refereshPayload, REFRESH_TOKEN_SECRET);
+    },
+
+    decodeToken: (token: string) => {
+        try {
+            return jwt.decode(token, JWT_SECRET);
+        } catch (error) {
+            throw error;
+        }
     }
 };

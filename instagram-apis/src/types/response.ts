@@ -1,5 +1,6 @@
 // libs
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { IUserResponse } from './user';
 
 type MessageType = {
     code: number,
@@ -15,4 +16,8 @@ export type ResponseSuccessType = {
 export type ResponseErrorType = {
     error: MessageType,
     response: Response
+};
+
+export interface RequestAuthenType extends Request {
+    user?: IUserResponse;
 };

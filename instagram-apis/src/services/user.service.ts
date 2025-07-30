@@ -1,5 +1,4 @@
 import { User } from "@/models";
-import { IUserResponse } from "@/types";
 import { findAllData, omitField } from "@/utils";
 
 class UserServices {
@@ -26,11 +25,11 @@ class UserServices {
     }
   };
 
-  updateUserById = async (userId: number, username: string, email: string) => {
+  updateUserById = async (userId: number, username: string, email: string, isAdmin: boolean) => {
     const res = await User.update(
-      { username, email },
+      { username, email, isAdmin },
       {
-        where: { user_id: userId }
+        where: { userId }
       }
     );
 
@@ -38,7 +37,7 @@ class UserServices {
   };
 
   deleteUserById = async (userId: number) => {
-    return await User.destroy({ where: { user_id: userId }});
+    return await User.destroy({ where: { userId }});
   }
 };
 
