@@ -6,6 +6,8 @@ export const MESSAGES_VALIDATION = {
     INVALID_USERNAME_PASSWORD: 'Username or password is invalid',
     INVALID_EMAIL: 'Invalid email address',
     INVALID_ID: 'ID must be a positive integer',
+    INVALID_AUTHOR_ID: 'Invalid author ID',
+    INVALID_ID_NUMBER: 'Author ID must be a valid number',
 };
 
 export const MESSAGES_AUTHENTICATION = {
@@ -19,6 +21,7 @@ export const MESSAGES_AUTHENTICATION = {
     INVALID_TOKEN: 'Invalid token',
     INVALID_EMAIL_PASSWORD: 'Invalid email or password',
     SUCCESSFUL: 'Success',
+    UN_AUTHORIZATION: 'Unauthorized'
 };
 
 export const MESSAGES = {
@@ -28,5 +31,13 @@ export const MESSAGES = {
         DELETE: 'Delete success',
         UPDATE: 'Update success',
         ADD: 'Add success'
+    },
+    ERRORS: {
+        POST: {
+            USER_NOT_FOUND: 'Author not found',
+            INVALID_SLUG: 'Slug must be unique'
+        }
     }
 };
+
+export const REQUIRED_MESSAGE = (field: string) => `${field} is required`;

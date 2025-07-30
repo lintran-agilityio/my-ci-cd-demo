@@ -26,7 +26,7 @@ export const API_ENPOINTS = {
     REGISTER: `${API_PREFIX}/auth/register`,
     LOGIN: `${API_PREFIX}/auth/login`,
     USERS: `${API_PREFIX}/users`,
-    USER_DETAIL: `${API_PREFIX}/users/:user_id`,
+    USER_DETAIL: `${API_PREFIX}/users/:userId`,
     POSTS: `${API_PREFIX}/posts`,
     POST_DETAIL: `${API_PREFIX}/posts/:id`,
     COMMENTS: `${API_PREFIX}/comments`,
