@@ -1,2 +1,3 @@
 export * from './authentication.service';
-export * from './user.services';
+export * from './user.service';
+export * from './post.service';
