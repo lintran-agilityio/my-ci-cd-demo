@@ -6,12 +6,12 @@ import { configLogger } from "@/configs";
 
 export const generateToken = {
     accessToken: (user: IUserResponse) => {
-        const { userId, email, username } = user;
+        const { userId, email, username, isAdmin } = user;
         // Calculate expiration time: 1 hour from now (in Unix timestamp)
         const expirationTime = Math.floor(Date.now() / 1000) + (1 * 60 * 60); // 1 hour
 
         return jwt.encode(
-            { userId, email, username, exp: expirationTime },
+            { userId, email, username, isAdmin, exp: expirationTime },
             JWT_SECRET || configLogger.params.jwtSecret
         ) || '';
     },

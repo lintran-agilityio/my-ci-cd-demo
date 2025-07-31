@@ -18,6 +18,8 @@ export const STATUS_CODE = {
     FORBIDDEN: 403,
     NOT_FOUND: 404,
     INTERNAL_SERVER_ERROR: 500,
+    NO_CONTENT: 204,
+    CONFLICT: 409
 };
 
 export const API_PREFIX = '/api/v1';
@@ -29,6 +31,7 @@ export const API_ENPOINTS = {
     USER_DETAIL: `${API_PREFIX}/users/:userId`,
     POSTS: `${API_PREFIX}/posts`,
     POST_DETAIL: `${API_PREFIX}/posts/:id`,
+    USERS_POST_ID: `${API_PREFIX}/users/:userId/post/:id`,
     COMMENTS: `${API_PREFIX}/comments`,
     COMMENTS_DETAIL: `${API_PREFIX}/comments/:id`,
     API_DOCS: `${API_PREFIX}/api-docs`
