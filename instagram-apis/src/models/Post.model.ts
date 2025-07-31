@@ -30,7 +30,7 @@ export class Post extends Model<IPostAttributes, PostCreationAttributesType> imp
 
 Post.init({
   id: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
     allowNull: false,
@@ -49,7 +49,7 @@ Post.init({
     allowNull: false
   },
   authorId: {
-    type: DataTypes.INTEGER.UNSIGNED,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: 'Users',

@@ -21,3 +21,9 @@ export const createPostSchema = postSchema.omit({
   updatedAt: true,
   publishedAt: true,
 });
+
+export const updatePostSchema = postSchema.partial().extend({
+  id: z.coerce.number().refine(val => !isNaN(val), {
+    message: MESSAGES_VALIDATION.INVALID_ID_NUMBER
+  })
+})

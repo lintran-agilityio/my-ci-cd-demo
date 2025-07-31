@@ -1,5 +1,7 @@
+import { MESSAGES, MESSAGES_VALIDATION } from "@/constants";
 import { Post } from "@/models";
 import { IPostAttributes } from "@/models/Post.model";
+import { IUserResponse } from "@/types";
 import { findAllData } from "@/utils";
 
 class PostServices {
@@ -20,8 +22,7 @@ class PostServices {
   existSlug = async (slug: string) => {
     try {
       return Post.findOne({ where: { slug }});
-    } catch (error) {
-      console.log('error',error)
+    } catch (error: unknown) {
       throw error;
     }
   };
@@ -29,16 +30,80 @@ class PostServices {
   create = async (payload: IPostAttributes) => {
     try {
       return await Post.create(payload);
-    } catch (error: any) {
-      console.log('Post creation error:', error);
-      console.log('Error name:', error.name);
-      console.log('Error message:', error.message);
-      if (error.errors) {
-        console.log('Validation errors:', error.errors);
-      }
+    } catch (error: unknown) {
       throw error;
     }
   };
+
+  get = async (postId: number) => {
+    try {
+      return Post.findByPk(postId)
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  getPostByAuthorId = async (userId: number, postId: number) => {
+    try {
+      return Post.findOne({
+        where: {
+          id: postId,
+          authorId: userId
+        }
+      })
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
+  update = async (post: Post, payload: IPostAttributes) => {
+    try {
+      // validate slug unique
+      const existSlugPost = await Post.findOne({ where: { slug: payload.slug }});
+
+      if (existSlugPost) {
+        return { message: MESSAGES_VALIDATION.INVALID_SLUG_POST }
+      }
+      await post.update(payload);
+
+      return { message: '' };
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
+  deletePosts = async () => {
+    try {
+      return await Post.destroy({
+        where: {},
+        truncate: true
+      })
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
+  deleteUsersPostById = async (
+    postId: number,
+    currentUserId: number,
+    isAdminUser: boolean,
+    userIdNumber: number
+  ) => {
+    try {
+      const isOwner = currentUserId === userIdNumber;
+
+      if (!isOwner && !isAdminUser) return { message: MESSAGES.ERRORS.NO_PERMISSION };
+      await Post.destroy({
+        where: { id: postId }
+      });
+
+      return {
+        message: ''
+      }
+    } catch (error: unknown) {
+      throw error;
+    }
+  }
 };
 
 export const postService = new PostServices();

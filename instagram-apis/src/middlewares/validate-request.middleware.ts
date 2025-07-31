@@ -5,7 +5,6 @@ import { ZodSchema } from "zod";
 export const validateRequest = (schema: ZodSchema, field = 'body', ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse((req as any)[field]);
-console.log('==result==', result)
     if (!result.success) {
       const formattedErrors = result.error.flatten().fieldErrors as Record<string, string[]>;
       let customErrors: Record<string, string> = {};

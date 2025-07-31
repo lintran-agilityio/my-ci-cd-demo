@@ -7,7 +7,8 @@ export const MESSAGES_VALIDATION = {
     INVALID_EMAIL: 'Invalid email address',
     INVALID_ID: 'ID must be a positive integer',
     INVALID_AUTHOR_ID: 'Invalid author ID',
-    INVALID_ID_NUMBER: 'Author ID must be a valid number',
+    INVALID_ID_NUMBER: 'ID must be a valid number',
+    INVALID_SLUG_POST: 'Slug already exists'
 };
 
 export const MESSAGES_AUTHENTICATION = {
@@ -35,8 +36,10 @@ export const MESSAGES = {
     ERRORS: {
         POST: {
             USER_NOT_FOUND: 'Author not found',
-            INVALID_SLUG: 'Slug must be unique'
-        }
+            INVALID_SLUG: 'Slug must be unique',
+            NOT_FOUND_OWNED_USER: "Post not found or not owned by user"
+        },
+        NO_PERMISSION: 'No permission'
     }
 };
 

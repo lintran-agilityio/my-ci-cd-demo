@@ -19,5 +19,6 @@ export type ResponseErrorType = {
 };
 
 export interface RequestAuthenType extends Request {
-    user?: IUserResponse;
+    userId?: number;
+    isAdmin?: boolean;
 };

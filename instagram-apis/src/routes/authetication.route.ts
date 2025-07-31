@@ -43,9 +43,7 @@ export const authenticationRouter = (app: Application) => {
 	 *       500:
 	 *         description: Server error
 	 */
-	app.post(API_ENPOINTS.REGISTER, validateRequest(registerSchema, 'body'), (req, res, next) => {
-		authenticationControler.register(req, res, next);
-	});
+	app.post(API_ENPOINTS.REGISTER, validateRequest(registerSchema, 'body'), authenticationControler.register);
 
 	/**
 	 * @openapi
@@ -81,7 +79,5 @@ export const authenticationRouter = (app: Application) => {
 	 *       500:
 	 *         description: Server error
 	 */
-	app.post(API_ENPOINTS.LOGIN, validateRequest(loginSchema, 'body'), (req, res, next) => {
-		authenticationControler.login(req, res, next);
-	});
+	app.post(API_ENPOINTS.LOGIN, validateRequest(loginSchema, 'body'), authenticationControler.login);
 };

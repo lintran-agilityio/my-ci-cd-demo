@@ -23,7 +23,7 @@ export const userRouter = (app: Application) => {
    *               items:
    *                 type: object
    *                 properties:
-   *                   id:
+   *                   useId:
    *                     type: integer
    *                     example: 1
    *                   username:
@@ -110,9 +110,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.put(API_ENPOINTS.USER_DETAIL, validateRequest(updateUserDetailSchema, 'body'), (req, res, next) => {
-    userController.updateUserById(req, res, next);
-  });
+  app.put(API_ENPOINTS.USER_DETAIL, validateRequest(updateUserDetailSchema, 'body'), userController.updateUserById);
 
   /**
    * @openapi
