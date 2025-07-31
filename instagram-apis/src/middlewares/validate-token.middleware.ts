@@ -2,13 +2,14 @@
 import { NextFunction, Request, Response } from "express";
 
 import { MESSAGES_AUTHENTICATION, STATUS_CODE } from "@/constants";
-import { generateToken, globalErrorHandler } from "@/utils";
+import { generateToken } from "@/utils";
 import { RequestAuthenType } from "@/types";
+import HttpExeptionError from "@/exceptions";
 
 export const validateToken = (req: RequestAuthenType,res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return next(globalErrorHandler(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.UN_AUTHORIZATION));
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return next(new HttpExeptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.UN_AUTHORIZATION));
   const token = authHeader ? authHeader.split(' ')[1] : '';
 
   try {
@@ -16,13 +17,13 @@ export const validateToken = (req: RequestAuthenType,res: Response, next: NextFu
 
     // checking expiration time
     if (decode.exp && decode.exp < Date.now() / 1000) {
-      return next(globalErrorHandler(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.ACCESS_TOKEN_EXPIRED));
+      return next(new HttpExeptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.ACCESS_TOKEN_EXPIRED));
     }
 
     req.user = decode;
     next();
   } catch (error) {
 
-    next(globalErrorHandler(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_TOKEN))
+    next(new HttpExeptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_TOKEN))
   }
 };
