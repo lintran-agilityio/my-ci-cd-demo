@@ -1,5 +1,3 @@
-import { IErrorWithStatus } from "@/types";
-
 export const toError = (value: unknown) => {
     if (value instanceof Error) return value;
 
