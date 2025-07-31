@@ -1,9 +1,10 @@
 // libs
 import { NextFunction, Request, Response } from "express";
 
-import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from "@/constants";
+import { MESSAGES, PAGINATION, STATUS_CODE } from "@/constants";
 import { postService, userServices } from "@/services";
-import { globalErrorHandler, logger, toError } from "@/utils";
+import { logger, toError } from "@/utils";
+import HttpExeptionError from "@/exceptions";
 
 class PostsController {
   getAll = async(req: Request, res: Response, next: NextFunction) => {
@@ -19,7 +20,7 @@ class PostsController {
       const { message } = toError(error);
       logger.error(message);
 
-      next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -33,12 +34,12 @@ class PostsController {
       const slugExiting = await postService.existSlug(slug);
 
       if (slugExiting) {
-        next(globalErrorHandler(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.INVALID_SLUG));
+        next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.INVALID_SLUG));
       }
 
       const user = await userServices.getUserById(authorId);
 
-      if (!user) return next(globalErrorHandler(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.USER_NOT_FOUND));
+      if (!user) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.USER_NOT_FOUND));
 
       const dataRes = await postService.create(body);
 
@@ -47,7 +48,7 @@ class PostsController {
       const { message } = toError(error);
       logger.error(message);
 
-      next(globalErrorHandler(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   }
 };
