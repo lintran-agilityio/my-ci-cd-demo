@@ -85,7 +85,11 @@ export const postsRouter = (app: Application) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  app.get(API_ENPOINTS.POSTS, validateToken, postController.getAll);
+  app.get(
+    API_ENPOINTS.POSTS,
+    (req, res, next) => { validateToken(req, res, next) },
+    postController.getAll
+  );
 
   /**
    * @openapi
@@ -137,7 +141,11 @@ export const postsRouter = (app: Application) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  app.get(API_ENPOINTS.POST_DETAIL, validateToken, postController.getPostById);
+  app.get(
+    API_ENPOINTS.POST_DETAIL,
+    (req, res, next) => { validateToken(req, res, next) },
+    postController.getPostById
+  );
 
   /**
    * @openapi
@@ -246,7 +254,12 @@ export const postsRouter = (app: Application) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  app.post(API_ENPOINTS.POSTS, validateToken, validateRequest(createPostSchema, 'body'), postController.createPostByUser);
+  app.post(
+    API_ENPOINTS.POSTS,
+    (req, res, next) => { validateToken(req, res, next) },
+    validateRequest(createPostSchema, 'body'),
+    postController.createPostByUser
+  );
 
   /**
    * @openapi
@@ -392,7 +405,7 @@ export const postsRouter = (app: Application) => {
    * @openapi
    * /api/v1/users/{userId}/posts/{id}:
    *   delete:
-   *     summary: Delete user by ID
+   *     summary: Delete users posts by post ID
    *     tags: [Posts Controller]
    *     security:
    *       - bearerAuth: []
