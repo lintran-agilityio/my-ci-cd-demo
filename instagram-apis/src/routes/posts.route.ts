@@ -251,7 +251,7 @@ export const postsRouter = (app: Application) => {
   /**
    * @openapi
    * /api/v1/users/{userId}/posts/{id}:
-   *   post:
+   *   put:
    *     summary: Update a Post of User by ID
    *     description: Update a post by Id of User include the authenticated user. Requires authentication and valid post data.
    *     tags: [Posts Controller]
@@ -362,12 +362,63 @@ export const postsRouter = (app: Application) => {
     postController.putUsersPostById
   );
 
+  /**
+ * @openapi
+ * /api/v1/posts:
+ *   delete:
+ *     summary: Delete all posts by admin user
+ *     description: Deletes all posts. Requires admin authentication.
+ *     tags:
+ *       - Posts Controller
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Posts deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
   app.delete(
     API_ENPOINTS.POSTS,
     (req, res, next) => { validateToken(req, res, next, true) },
     postController.deletePosts
   );
 
+  /**
+   * @openapi
+   * /api/v1/users/{userId}/posts/{id}:
+   *   delete:
+   *     summary: Delete user by ID
+   *     tags: [Posts Controller]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: The user ID
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: The post ID
+   *     responses:
+   *       200:
+   *         description: User deleted successfully
+   *       404:
+   *         description: User not found
+   *       403:
+   *         description: No permistion
+   *       500:
+   *         description: Internal server error
+   */
   app.delete(
     API_ENPOINTS.USERS_POST_ID,
     (req, res, next) => { validateToken(req, res, next) },
