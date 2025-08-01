@@ -19,9 +19,8 @@ class UsersController {
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
       
-      return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
+      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -37,8 +36,6 @@ class UsersController {
       const { message } = toError(error);
       logger.error(message);
       next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
-
-      return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error });
     }
   };
 

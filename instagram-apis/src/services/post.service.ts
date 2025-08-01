@@ -1,7 +1,6 @@
 import { MESSAGES, MESSAGES_VALIDATION } from "@/constants";
 import { Post } from "@/models";
 import { IPostAttributes } from "@/models/Post.model";
-import { IUserResponse } from "@/types";
 import { findAllData } from "@/utils";
 
 class PostServices {
@@ -12,7 +11,6 @@ class PostServices {
         offset,
         limit,
         order: ['createdAt', 'DESC'],
-        fieldOmit: "password"
       });
     } catch (error) {
       throw error;

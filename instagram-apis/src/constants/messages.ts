@@ -37,9 +37,14 @@ export const MESSAGES = {
         POST: {
             USER_NOT_FOUND: 'Author not found',
             INVALID_SLUG: 'Slug must be unique',
-            NOT_FOUND_OWNED_USER: "Post not found or not owned by user"
+            NOT_FOUND_OWNED_USER: "Post not found or not owned by user",
+            NOT_FOUND: "Post not found"
         },
-        NO_PERMISSION: 'No permission'
+        NO_PERMISSION: 'No permission',
+        COMMENT: {
+            NOT_FOUND: 'Comment not found for this post',
+            NOT_FOUND_COMMENT_OR_POST: 'Comment not found or Comment not found for this post'
+        }
     }
 };
 
