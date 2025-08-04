@@ -1,4 +1,4 @@
 export * from './authentication.service';
 export * from './user.service';
 export * from './post.service';
-export * from './comment.services';
+export * from './comment.service';

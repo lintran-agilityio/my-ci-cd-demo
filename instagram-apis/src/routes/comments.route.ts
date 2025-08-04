@@ -58,7 +58,7 @@ export const commentsRouter = (app: Application) => {
    */
   app.get(
     API_ENPOINTS.POST_COMMENTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.getPostsComment
   );
 
@@ -104,7 +104,7 @@ export const commentsRouter = (app: Application) => {
    */
   app.get(
     API_ENPOINTS.POST_COMMENT_BY_ID,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.getPostsCommentById
   );
 
@@ -146,7 +146,7 @@ export const commentsRouter = (app: Application) => {
    */
   app.post(
     API_ENPOINTS.POST_COMMENTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.postPostsComments
   );
 
@@ -178,7 +178,7 @@ export const commentsRouter = (app: Application) => {
    */
   app.delete(
     API_ENPOINTS.POST_COMMENTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.deletePostsComments
   );
 
@@ -215,7 +215,7 @@ export const commentsRouter = (app: Application) => {
    */
   app.delete(
     API_ENPOINTS.POST_COMMENT_BY_ID,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.deletePostsCommentById
   );
 };
