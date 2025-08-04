@@ -2,7 +2,7 @@
 import { Application, NextFunction } from 'express';
 
 import { API_ENPOINTS } from '@/constants';
-import { postController } from '@/controllers/post.controller';
+import { postController } from '@/controllers';
 import { validateToken } from '@/middlewares/validate-token.middleware';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 import { createPostSchema, updatePostSchema } from '@/validation';
@@ -87,7 +87,7 @@ export const postsRouter = (app: Application) => {
    */
   app.get(
     API_ENPOINTS.POSTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     postController.getAll
   );
 
@@ -142,8 +142,8 @@ export const postsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.get(
-    API_ENPOINTS.POST_DETAIL,
-    (req, res, next) => { validateToken(req, res, next) },
+    API_ENPOINTS.POST_BY_ID,
+    validateToken(),
     postController.getPostById
   );
 
@@ -256,7 +256,7 @@ export const postsRouter = (app: Application) => {
    */
   app.post(
     API_ENPOINTS.POSTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     validateRequest(createPostSchema, 'body'),
     postController.createPostByUser
   );
@@ -370,7 +370,7 @@ export const postsRouter = (app: Application) => {
    */
   app.put(
     API_ENPOINTS.USERS_POST_ID,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     validateRequest(updatePostSchema, 'body'),
     postController.putUsersPostById
   );
@@ -397,7 +397,7 @@ export const postsRouter = (app: Application) => {
  */
   app.delete(
     API_ENPOINTS.POSTS,
-    (req, res, next) => { validateToken(req, res, next, true) },
+    validateToken(true),
     postController.deletePosts
   );
 
@@ -434,7 +434,7 @@ export const postsRouter = (app: Application) => {
    */
   app.delete(
     API_ENPOINTS.USERS_POST_ID,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     (req: RequestAuthenType, res, next: NextFunction) => postController.deleteUsersPostById(req, res, next)
   )
 };

@@ -72,7 +72,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.get(API_ENPOINTS.USER_DETAIL, validateRequest(userDetailSchema, 'params'), userController.getUserById);
+  app.get(API_ENPOINTS.USER_BY_ID, validateRequest(userDetailSchema, 'params'), userController.getUserById);
 
   /**
    * @openapi
@@ -110,7 +110,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.put(API_ENPOINTS.USER_DETAIL, validateRequest(updateUserDetailSchema, 'body'), userController.updateUserById);
+  app.put(API_ENPOINTS.USER_BY_ID, validateRequest(updateUserDetailSchema, 'body'), userController.updateUserById);
 
   /**
    * @openapi
@@ -133,5 +133,5 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.delete(API_ENPOINTS.USER_DETAIL, userController.deleteUserById)
+  app.delete(API_ENPOINTS.USER_BY_ID, userController.deleteUserById)
 };

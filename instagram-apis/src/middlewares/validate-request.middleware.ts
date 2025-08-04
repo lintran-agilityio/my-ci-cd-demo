@@ -2,7 +2,7 @@ import { STATUS_CODE } from "@/constants";
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema } from "zod";
 
-export const validateRequest = (schema: ZodSchema, field = 'body', ) => {
+export const validateRequest = (schema: ZodSchema, field = 'body') => {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse((req as any)[field]);
     if (!result.success) {

@@ -93,7 +93,7 @@ class PostsController {
 
       if (message) return next(new HttpExeptionError(STATUS_CODE.CONFLICT, message));
 
-      return res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS.UPDATE });
+      return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.UPDATE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
