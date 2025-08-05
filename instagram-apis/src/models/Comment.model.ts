@@ -39,7 +39,8 @@ Comment.init({
     references: {
       model: 'Users',
       key: 'userId'
-    }
+    },
+    onDelete: 'CASCADE'
   },
   content: {
     type: DataTypes.TEXT,

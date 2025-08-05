@@ -1,4 +1,8 @@
-import { User } from "@/models";
+// libs
+import { Op } from "sequelize";
+
+import { Comment, Post, User } from "@/models";
+import { IUser } from "@/types";
 import { findAllData, omitField } from "@/utils";
 
 class UserServices {
@@ -36,8 +40,108 @@ class UserServices {
     return res[0];
   };
 
+  checkExistingEmail = async (userId: number, email: string) => {
+    try {
+      const existingEmail = await User.findOne({
+        where: {
+          email,
+          userId: { [Op.ne]: userId }, // id khác user đang update
+        },
+      });
+
+      return existingEmail;
+    } catch (error: unknown) {
+      throw error
+    }
+  };
+
+  checkExistingEmails = async (users: IUser[], userEmails: string[]) => {
+    try {
+      if (userEmails.length === 0) return [];
+
+      const existingEmailData = await User.findAll({
+        where: {
+          email: { [Op.in]: userEmails }
+        },
+        attributes: ["userId", "email"]
+      });
+
+      const conflictEmail = [];
+
+      for (const user of users) {
+        for (const dataUser of existingEmailData) {
+          if (dataUser.email === user.email && dataUser.userId !== user.userId) {
+            conflictEmail.push({ email: user.email, userId: dataUser.userId });
+          }
+        }
+      }
+
+      return conflictEmail;
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
+  updateUsers = async(usersUpdate: IUser[]) => {
+    try {
+      const usersUpdated: IUser[] = [];
+
+      for (const userData of usersUpdate) {
+        const {
+          userId,
+          email,
+          username,
+          isAdmin
+        } = userData;
+
+        const [count] = await User.update(
+          {
+            email,
+            username,
+            isAdmin
+          },
+          { where: { userId } }
+        );
+        
+        if (count > 0) {
+          const userUpdated = await User.findOne({ where: { userId }});
+
+          if (userUpdated) usersUpdated.push(userUpdated);
+        }
+      }
+
+      return usersUpdated;
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
+  deleteUsers = async () => {
+    try {
+
+      // Delete all table have foreignKey by authorId
+      await Comment.destroy({
+        where: {}
+      });
+      await Post.destroy({
+        where: {}
+      });
+
+      return await User.destroy({
+        where: {},
+        individualHooks: true
+      })
+    } catch (error: unknown) {
+      throw error;
+    }
+  };
+
   deleteUserById = async (userId: number) => {
-    return await User.destroy({ where: { userId }});
+    try {
+      return await User.destroy({ where: { userId }});
+    } catch (error: unknown) {
+      throw error;
+    }
   }
 };
 

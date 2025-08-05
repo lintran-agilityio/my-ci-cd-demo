@@ -8,7 +8,7 @@ import { commentController } from '@/controllers';
 export const commentsRouter = (app: Application) => {
   app.get(
     API_ENPOINTS.COMMENTS,
-    (req, res, next) => { validateToken(req, res, next) },
+    validateToken(),
     commentController.getAll
   ),
 

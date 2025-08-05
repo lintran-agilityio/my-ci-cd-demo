@@ -54,7 +54,8 @@ Post.init({
     references: {
       model: 'Users',
       key: 'userId'
-    }
+    },
+    onDelete: 'CASCADE'
   },
   status: {
     type: DataTypes.ENUM('draft', 'published', 'stored'),
