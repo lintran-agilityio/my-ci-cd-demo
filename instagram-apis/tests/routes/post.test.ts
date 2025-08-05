@@ -4,7 +4,6 @@ import { API_ENPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
 
 const { UPDATE, ADD } = MESSAGES.SUCCESS;
 
-// ✅ Mock HOF: validateToken() → middleware
 jest.mock('@/middlewares/validate-token.middleware', () => ({
   __esModule: true,
   validateToken: (isValidAdmin?: boolean) => {
@@ -48,11 +47,12 @@ jest.mock('@/services/post.service', () => ({
 
 jest.mock('@/controllers/post.controller', () => ({
   postController: {
-    getAll: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ message: ADD, data: [] })),
+    getAll: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json()),
     getPostById: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ message: ADD })),
     createPostByUser: jest.fn((_req, res) => res.status(STATUS_CODE.CREATED).json({ message: ADD })),
     putUsersPostById: jest.fn((_req, res) => res.status(STATUS_CODE.NO_CONTENT).json({ message: UPDATE })),
-    deletePosts: jest.fn((_req, res) => res.status(STATUS_CODE.NO_CONTENT).end())
+    deletePosts: jest.fn((_req, res) => res.status(STATUS_CODE.NO_CONTENT).end()),
+    deleteUsersPostById: jest.fn((_req, res) => res.status(STATUS_CODE.NO_CONTENT).end()),
   }
 }));
 
@@ -138,5 +138,12 @@ describe('Posts routes for success', () => {
 
     expect(postController.deletePosts).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
-  }, 15000);
+  });
+
+  it(`DELET ${API_ENPOINTS.USERS_POST_ID} delete users post by id success`, async () => {
+    const res = await requestApp.delete(API_ENPOINTS.USERS_POST_ID);
+
+    expect(postController.deletePosts).toHaveBeenCalled();
+    expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
+  })
 });
