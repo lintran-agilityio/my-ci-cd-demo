@@ -6,15 +6,15 @@ import { IUser } from "@/types";
 import { findAllData, omitField } from "@/utils";
 
 class UserServices {
-    getAll = async (offset: number, limit: number) => {
-      try {
-        return findAllData({
-          model: User,
-          offset,
-          limit,
-          order: ['createdAt', 'DESC'],
-          fieldOmit: "password"
-        });
+  getAll = async (offset: number, limit: number) => {
+    try {
+      return findAllData({
+        model: User,
+        offset,
+        limit,
+        order: ['createdAt', 'DESC'],
+        fieldOmit: "password"
+      });
     } catch (error) {
       throw error;
     }

@@ -1,11 +1,11 @@
 class HttpExeptionError extends Error  {
 
-  statusCode: number;
+  status: number;
   message: string;
 
   constructor(statusCode: number, message: string) {
     super(message);
-    this.statusCode = statusCode;
+    this.status = statusCode;
     this.message = message;
   }
 }

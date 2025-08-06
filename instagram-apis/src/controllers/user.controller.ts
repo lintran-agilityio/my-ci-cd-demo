@@ -44,11 +44,11 @@ class UsersController {
     try {
       const { users = [] } = req.body;
 
-      // Valid duplicate in payload
+      // Valid duplicate email in payload
       const userEmails = users.map((u: IUser) => u.email).filter(Boolean);
       const emailNoDuplicate = new Set(userEmails);
 
-      if (emailNoDuplicate !== userEmails.length) {
+      if (emailNoDuplicate.size !== userEmails.length) {
         return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, "Duplicate email in user' payload"))
       }
 
@@ -66,7 +66,7 @@ class UsersController {
       const dataRes = await userServices.updateUsers(users);
 
       if(dataRes && dataRes.length === 0) {
-        return res.status(STATUS_CODE.NOT_FOUND).json({ message: MESSAGES.NOT_FOUND });
+        return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
       }
 
       return res.status(STATUS_CODE.OK).json({
