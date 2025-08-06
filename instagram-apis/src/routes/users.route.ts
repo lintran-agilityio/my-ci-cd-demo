@@ -3,7 +3,7 @@ import { Application } from 'express';
 
 import { API_ENPOINTS } from '@/constants';
 import { userController } from '@/controllers';
-import { updateUserDetailSchema, userDetailSchema } from '@/validation';
+import { userUpdateSchema, userSchema, usersUpdateSchema } from '@/validation';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 
 export const userRouter = (app: Application) => {
@@ -72,7 +72,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.get(API_ENPOINTS.USER_BY_ID, validateRequest(userDetailSchema, 'params'), userController.getUserById);
+  app.get(API_ENPOINTS.USER_BY_ID, validateRequest(userSchema, 'params'), userController.getUserById);
 
   /**
    * @openapi
@@ -110,7 +110,82 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.put(API_ENPOINTS.USER_BY_ID, validateRequest(updateUserDetailSchema, 'body'), userController.updateUserById);
+  app.put(API_ENPOINTS.USER_BY_ID, validateRequest(userUpdateSchema, 'body'), userController.updateUserById);
+
+  /**
+   * @api {put} /api/v1/users Update multiple users
+   * @apiName UpdateUsers
+   * @apiGroup Users
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Update multiple user records by their userId. All fields are optional except userId.
+   *
+   * @apiBody {Object[]} users List of users to update
+   * @apiBody {Number} users.userId User's unique ID (required)
+   * @apiBody {String} [users.email] Email address
+   * @apiBody {String} [users.username] Username
+   * @apiBody {Boolean} [users.isAdmin] Whether the user is admin
+   *
+   * @apiExample {json} Request Body
+   * [
+   *   {
+   *     "userId": 1,
+   *     "email": "newemail@example.com",
+   *     "username": "newusername",
+   *     "isAdmin": true
+   *   },
+   *   {
+   *     "userId": 2,
+   *     "email": "another@example.com"
+   *   }
+   * ]
+   *
+   * @apiSuccess {Object[]} data Updated user records
+   * @apiSuccessExample {json} Success Response
+   * HTTP/1.1 200 OK
+   * {
+   *   "data": [
+   *     {
+   *       "userId": 1,
+   *       "email": "newemail@example.com",
+   *       "username": "newusername",
+   *       "isAdmin": true,
+   *       "updatedAt": "2025-08-05T10:30:00.000Z"
+   *     },
+   *     ...
+   *   ]
+   * }
+   *
+   * @apiError (400) BadRequest Invalid request body format or missing required fields
+   * @apiError (500) InternalServerError Server error
+   */
+  app.put(API_ENPOINTS.USERS, validateRequest(usersUpdateSchema, 'body'), userController.updateUsers);
+
+  /**
+   * @api {delete} /api/v1/users Delete multiple users
+   * @apiName DeleteUsers
+   * @apiGroup Users
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Delete multiple users by their userId.
+   *
+   * @apiBody {Number[]} userIds List of user IDs to delete
+   *
+   * @apiExample {json} Request Body
+   * {
+   *   "userIds": [1, 2, 3]
+   * }
+   *
+   * @apiSuccess {String} message Deletion confirmation message
+   * @apiSuccessExample {json} Success Response
+   * HTTP/1.1 200 OK
+   * {
+   *   "message": "Users deleted successfully"
+   * }
+   *
+   * @apiError (500) InternalServerError Server error
+   */
+  app.delete(API_ENPOINTS.USERS, userController.deleteUsers);
 
   /**
    * @openapi
