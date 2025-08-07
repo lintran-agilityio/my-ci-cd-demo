@@ -1,6 +1,7 @@
 // libs
 import { SuperTest, Test } from "supertest";
 import { API_ENPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
+import { MOCKS_POSTS } from "@/mocks/posts";
 
 const { UPDATE, ADD } = MESSAGES.SUCCESS;
 
@@ -47,7 +48,7 @@ jest.mock('@/services/post.service', () => ({
 
 jest.mock('@/controllers/post.controller', () => ({
   postController: {
-    getAll: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json()),
+    getAll: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ data: MOCKS_POSTS, message: ADD })),
     getPostById: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ message: ADD })),
     createPostByUser: jest.fn((_req, res) => res.status(STATUS_CODE.CREATED).json({ message: ADD })),
     putUsersPostById: jest.fn((_req, res) => res.status(STATUS_CODE.NO_CONTENT).json({ message: UPDATE })),
@@ -89,7 +90,7 @@ describe('Posts routes for success', () => {
 
     expect(postController.getAll).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
-    expect(res.body.message).toBe(ADD);
+    expect(res.body.data).toStrictEqual(MOCKS_POSTS);
   });
 
   it(`GET: ${API_ENPOINTS.POST_BY_ID} success`, async () => {

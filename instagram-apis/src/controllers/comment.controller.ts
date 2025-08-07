@@ -9,8 +9,13 @@ import { RequestAuthenType } from "@/types";
 
 class CommentsController {
   getAll = async(req: Request, res: Response, next: NextFunction) => {
+    const { DEFAULT: { OFFSET, LIMIT } } = PAGINATION;
+    const { offset =  OFFSET, limit = LIMIT } = req.query;
+    const limitNumber = Number(limit);
+    const offsetNumber = Number(offset);
+
     try {
-      const dataRes = await commentServices.getAll(0, 20);
+      const dataRes = await commentServices.getAll(offsetNumber, limitNumber);
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
       const { message } = toError(error);

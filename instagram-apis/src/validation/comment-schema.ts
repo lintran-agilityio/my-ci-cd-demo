@@ -11,6 +11,13 @@ export const commentSchema = z.object({
     message: MESSAGES_VALIDATION.INVALID_AUTHOR_ID
   }),
   content: z.string().min(1, REQUIRED_MESSAGE("content")),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
+});
+
+export const createCommentSchema = commentSchema.omit({
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const updateCommentSchema = commentSchema.partial().extend({

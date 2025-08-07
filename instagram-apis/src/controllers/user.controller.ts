@@ -55,6 +55,7 @@ class UsersController {
       // Valid email' unique in DB
       if (userEmails.length > 0) {
         const emailsDuplicate = await userServices.checkExistingEmails(users, userEmails);
+
         if (emailsDuplicate?.length > 0) {
           return res.status(STATUS_CODE.BAD_REQUEST).json({
             message: "Some emails already exist",
@@ -64,8 +65,7 @@ class UsersController {
       }
 
       const dataRes = await userServices.updateUsers(users);
-
-      if(dataRes && dataRes.length === 0) {
+      if (dataRes && dataRes.length === 0) {
         return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
       }
 
@@ -91,7 +91,7 @@ class UsersController {
       if (email) {
         const existingEmail = await userServices.checkExistingEmail(userIdNumber, email);
 
-        if (existingEmail) {
+        if (existingEmail && Object.keys(existingEmail).length) {
           next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, `Email ${email} existing`));
         }
       }

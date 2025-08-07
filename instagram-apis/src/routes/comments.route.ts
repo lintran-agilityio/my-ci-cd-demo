@@ -3,7 +3,7 @@ import { Application } from 'express';
 
 import { API_ENPOINTS } from '@/constants';
 import { commentController } from '@/controllers';
-import { updatePostSchema } from '@/validation';
+import { createCommentSchema } from '@/validation';
 import { validateToken } from '@/middlewares/validate-token.middleware';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 
@@ -149,7 +149,7 @@ export const commentsRouter = (app: Application) => {
   app.post(
     API_ENPOINTS.POST_COMMENTS,
     validateToken(),
-    validateRequest(updatePostSchema, 'body'),
+    validateRequest(createCommentSchema, 'body'),
     commentController.postPostsComments
   );
 

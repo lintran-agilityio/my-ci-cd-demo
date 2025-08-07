@@ -1,6 +1,9 @@
 // libs
 import { SuperTest, Test } from "supertest";
+
 import { API_ENPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
+import { userRouter } from "@/routes/users.route";
+import { userController } from "@/controllers/user.controller";
 
 const { UPDATE, ADD, DELETE } = MESSAGES.SUCCESS;
 const mockingUsers = [
@@ -34,20 +37,14 @@ let app: any;
 let requestApp: SuperTest<Test>;
 
 describe('User routes for success', () => {
-  let userController: any;
+  beforeAll(async () => {
+    const express = require('express');
 
-  beforeAll(() => {
-    jest.isolateModules(() => {
-      const { userRouter } = require('@/routes/user.route');
-      const express = require('express');
 
-      userController = require('@/controllers/user.controller').userController;
-
-      app = express();
-      app.use(express.json());
-      userRouter(app);
-      requestApp = require('supertest')(app);
-    });
+    app = express();
+    app.use(express.json());
+    userRouter(app);
+    requestApp = require('supertest')(app);
   });
 
   afterAll(() => {
