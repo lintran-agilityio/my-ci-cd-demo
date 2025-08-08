@@ -5,9 +5,8 @@ import { NextFunction, Request, Response } from 'express';
 import { commentController } from "@/controllers";
 import { postService, commentServices } from '@/services';
 import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from '@/constants';
-import { COMMENTS_PAGINATION, MOCKS_COMMENTS_INCLUDE_POST_USER, MOCKS_POSTS } from '@/mocks';
+import { MOCKS_COMMENTS_INCLUDE_POST_USER, MOCKS_POSTS } from '@/mocks';
 import HttpExeptionError from '@/exceptions';
-import de from 'zod/v4/locales/de.cjs';
 
 describe('Post controller', () => {
   let req: Partial<Request>;

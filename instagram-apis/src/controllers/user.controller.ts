@@ -31,6 +31,8 @@ class UsersController {
     try {
       const userIdNumber = Number(userId);
       const dataRes = await userServices.getUserById(userIdNumber);
+
+      if (!dataRes) return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
         
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
@@ -63,8 +65,8 @@ class UsersController {
           })
         }
       }
-
       const dataRes = await userServices.updateUsers(users);
+
       if (dataRes && dataRes.length === 0) {
         return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
       }
@@ -87,20 +89,24 @@ class UsersController {
 
     try {
       const userIdNumber = Number(userId);
-
       if (email) {
         const existingEmail = await userServices.checkExistingEmail(userIdNumber, email);
-
         if (existingEmail && Object.keys(existingEmail).length) {
-          next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, `Email ${email} existing`));
+          return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, `Email ${email} existing`));
         }
       }
-
+      
       const dataRes = await userServices.updateUserById(userIdNumber, username, email, isAdmin);
 
-      if (dataRes === 0) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (!dataRes) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+
+      // fetch updated user
+      const updatedUser = await userServices.getUserById(userIdNumber);
       
-      return res.status(STATUS_CODE.OK).json({ messgae: MESSAGES.SUCCESS.UPDATE });
+      return res.status(STATUS_CODE.OK).json({
+        message: MESSAGES.SUCCESS.UPDATE,
+        data: updatedUser
+      });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);

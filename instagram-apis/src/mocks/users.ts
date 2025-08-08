@@ -6,7 +6,7 @@ export const USER_PAYLOAD = {
 };
 
 export const USER_PAYLOAD_LOGIN = {
-  email: 'user@gmail.com',
+  email: 'usera@gmail.com',
   password: 'Abc@12345'
 };
 
@@ -20,3 +20,16 @@ export const LIST_USERS = [
     "createdAt": "2025-08-06T08:19:59.636Z"
   } 
 ];
+
+export const MOCK_USERS_RESPONSE = {
+  data: {
+    data: LIST_USERS,
+    meta: {
+      pagination: {
+        limit: 10,
+        offset: 0,
+        total: 1,
+      }
+    }
+  }
+};

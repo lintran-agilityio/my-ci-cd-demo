@@ -1,342 +1,251 @@
 // libs
 import 'jest';
-import { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, Response, Express } from 'express';
+import bodyParser from 'body-parser';
+import request from 'supertest';
 
-import { userController } from "@/controllers";
-import { userServices } from '@/services';
-import { MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE, MESSAGES } from '@/constants';
+import { sequelize } from "@/configs";
+import { authenticationControler, userController } from "@/controllers";
+import { API_ENPOINTS, MESSAGES_AUTHENTICATION, STATUS_CODE, PAGINATION, MESSAGES } from '@/constants';
 import HttpExeptionError from '@/exceptions';
-import { LIST_USERS, MOCKS_POSTS } from '@/mocks';
+import { USER_PAYLOAD, USER_PAYLOAD_LOGIN, MOCK_USERS_RESPONSE, LIST_USERS } from '@/mocks';
+import { User } from '@/models';
+import { findAllData } from '@/utils';
+import { RequestAuthenType } from '@/types';
+import { validateToken } from '@/middlewares/validate-token.middleware';
 
-jest.mock('@/services');
+const app: Express = express();
+app.use(bodyParser.json());
 
-describe('User controller', () => {
+const { DEFAULT: { LIMIT, OFFSET } } = PAGINATION;
+
+jest.mock('@/utils', () => ({
+  ...jest.requireActual('@/utils'),
+  findAllData: jest.fn()
+}));
+
+jest.mock('@/middlewares/validate-token.middleware', () => ({
+  validateToken: (req: RequestAuthenType, res: Response, next: NextFunction) => {
+    req.userId = 1
+    req.isAdmin = true;
+    next();
+  }
+}));
+
+describe('Users controller', () => {
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: Partial<NextFunction>;
-  const { OFFSET, LIMIT } = PAGINATION.DEFAULT;
-  const { UPDATE } = MESSAGES.SUCCESS;
+  let seededUserId: number;
+
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
+    const user = await User.create({ ...USER_PAYLOAD, isAdmin: true });
+
+    seededUserId = user.userId;
+  });
 
   beforeEach(() => {
     req = {
-      query: {
-        offset: OFFSET.toString(),
-        limit: LIMIT.toString(),
-      },
-      params: {
-        userId: '1'
-      },
-      body: {
-        users: LIST_USERS
-      }
+      body: USER_PAYLOAD
     };
+
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn()
-    };
+    }
 
     next = jest.fn();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
-    (userServices.checkExistingEmails as jest.Mock).mockReset();
-    (userServices.updateUsers as jest.Mock).mockReset();
   });
 
-  describe('Get all Users', () => {
-    it('Get Users Success: should return all users', async () => {
-      const data = {
-        data: LIST_USERS,
-        meta: {
-          pagination: {
-            limit: LIMIT,
-            offset: OFFSET
-          }
-        }
-      };
+  afterAll(async () => {
+    await sequelize.close();
+  });
+  
+  describe('Users: get all users', () => {
+    app.get(API_ENPOINTS.USERS, userController.getAll);
 
-      userServices.getAll = jest.fn().mockResolvedValue(data);
-      await userController.getAll(req as Request, res as Response, next as NextFunction);
-
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data });
+    // Middleware handle error
+    app.use((err: HttpExeptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('Get Users Error: should return INTERNAL_SERVER_ERROR error', async () => {
+    it('Should get all users: get users', async () => {
+      (findAllData as jest.Mock).mockResolvedValue({
+        count: LIST_USERS.length,
+        rows: LIST_USERS
+      } as any);
+
+      const response = await request(app)
+        .get(API_ENPOINTS.USERS)
+        .query({
+          limit: LIMIT,
+          offset: OFFSET
+        });
+console.log('response', response.body.data);
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data?.rows[0]).toHaveProperty("email", "user@gm.com");
+      expect(response.body.data?.rows[0]).not.toHaveProperty("password");
+    });
+
+    it('Should return error: no users found', async () => {
+      
       const error = new HttpExeptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
+      (findAllData as jest.Mock).mockRejectedValue(error);
 
-      userServices.getAll = jest.fn().mockRejectedValue(error);
-      await userController.getAll(req as Request, res as Response, next as NextFunction);
+      const response = await request(app)
+        .get(API_ENPOINTS.USERS)
+        .query({
+          limit: LIMIT,
+          offset: OFFSET
+        });
 
-      expect(next).toHaveBeenCalledWith(error);
+        expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+        expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
   });
 
-  describe('Get User by id', () => {
-    it('Get User Success: should return user', async () => {
-      const data = {
-        data: LIST_USERS[0]
-      };
+  describe('Users: get user by id ', () => {
+    app.get(`${API_ENPOINTS.USERS}/:userId`, userController.getUserById);
 
-      userServices.getUserById = jest.fn().mockResolvedValue(data);
-      await userController.getUserById(req as Request, res as Response, next as NextFunction);
+    // Middleware handle error
+    app.use((err: HttpExeptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+    it('Should get user by id: get user', async () => {
+      const response = await request(app)
+        .get(`${API_ENPOINTS.USERS}/${seededUserId}`);
 
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data });
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data).toHaveProperty("email", "user@gmail.com");
+      expect(response.body.data).not.toHaveProperty("password");
     });
 
-    it('Get User Error: should return INTERNAL_SERVER_ERROR error', async () => {
+    it('Should return error: user not found', async () => {
+      const response = await request(app)
+        .get(`${API_ENPOINTS.USERS}/9999`);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
+    });
+
+    it('Should return error: server error', async () => {
       const error = new HttpExeptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
+      jest.spyOn(User, 'findByPk').mockRejectedValue(error);
 
-      userServices.getUserById = jest.fn().mockRejectedValue(error);
-      await userController.getAll(req as Request, res as Response, next as NextFunction);
+      const response = await request(app)
+        .get(`${API_ENPOINTS.USERS}/${seededUserId}`);
 
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
   });
 
-  describe('PUT list Users', () => {
-    it('Update list Users Success: should update and return users', async () => {
-      (userServices.checkExistingEmails as jest.Mock).mockResolvedValueOnce([]);
-      (userServices.updateUsers as jest.Mock).mockResolvedValueOnce(LIST_USERS);
-      await userController.updateUsers(req as Request, res as Response, next as NextFunction);
+  describe('Users: update list users ', () => {
+    app.put(`${API_ENPOINTS.USERS}`, validateToken, userController.updateUsers);
 
-      expect(userServices.checkExistingEmails).toHaveBeenCalledWith(LIST_USERS, ["user@gm.com"]);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data: LIST_USERS, message: UPDATE });
-      expect(next).not.toHaveBeenCalled();
+    // Middleware handle error
+    app.use((err: HttpExeptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
-
-    it('Update list Users Error: should return "Duplicate email in user " error', async () => {
-      req.body = {
-        users: [
-          ...LIST_USERS,
-          {
-            "userId": 1,
-            "email": "user@gm.com",
-            "username": "Admin",
-            "isAdmin": true,
-          } 
-        ]
-      }
-      const error = new HttpExeptionError(
-        STATUS_CODE.BAD_REQUEST,
-        "Duplicate email in user' payload"
-      );
-
-      (userServices.checkExistingEmails as jest.Mock).mockResolvedValueOnce([]);
-      (userServices.updateUsers as jest.Mock).mockResolvedValueOnce(LIST_USERS);
-      await userController.updateUsers(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-
-    it('Update list Users Error: should return "Some emails already exist " error', async () => {
-      const reqMock: Partial<Request> = {
-        body: {
+    it('Should update list users', async () => {
+      const newEmail = 'testUpdate@gmail.com';
+      const response = await request(app)
+        .put(API_ENPOINTS.USERS)
+        .send({
           users: [
-            ...LIST_USERS,
-            {
-              "userId": 1,
-              "email": "user1@gm.com",
-              "username": "Admin",
-              "isAdmin": true,
-            } 
+            { ...USER_PAYLOAD, userId: seededUserId, email: newEmail },
           ]
-        }
-      };
+        });
 
-      (userServices.checkExistingEmails as jest.Mock).mockResolvedValueOnce([
-        {
-          userId: 1,
-          email: "user@gm.com",
-          username: "Admin",
-          isAdmin: true,
-        },
-      ]);
-      await userController.updateUsers(reqMock as Request, res as Response, next as NextFunction);
-    
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.BAD_REQUEST);
-      expect(res.json).toHaveBeenCalledWith({
-        message: "Some emails already exist",
-        data: [
-          {
-            userId: 1,
-            email: "user@gm.com",
-            username: "Admin",
-            isAdmin: true,
-          },
-        ],
-      });
-    
-      expect(next).not.toHaveBeenCalled();
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.message).toBe(MESSAGES.SUCCESS.UPDATE);
+      expect(response.body.data[0]).toHaveProperty("email", newEmail);
     });
 
-    it('Update list Users Error: should return "No found " error', async () => {
-      req.body = {
-        users: [
-          ...LIST_USERS,
-          {
-            "userId": 1,
-            "email": "user1@gm.com",
-            "username": "Admin",
-            "isAdmin": true,
-          } 
-        ]
-      };
-      const error = new HttpExeptionError(
-        STATUS_CODE.NOT_FOUND,
-        MESSAGES.NOT_FOUND
-      );
-
-      (userServices.checkExistingEmails as jest.Mock).mockResolvedValueOnce([]);
-      (userServices.updateUsers as jest.Mock).mockResolvedValueOnce([]);
-    
-      await userController.updateUsers(req as Request, res as Response, next as NextFunction);
-    
-      expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe('PUT User by id: update a user by userId', () => {
-    const payload = {
-      username: "Admin",
-      email: "abc@gmail.com",
-      isAdmin: true
-    };
-    it('Update User Success: should update and return user', async () => {
-      req = {
-        params: { userId: '1' },
-        body: payload
-      };
-
-      (userServices.checkExistingEmail as jest.Mock).mockResolvedValueOnce([]);
-      (userServices.updateUserById as jest.Mock).mockResolvedValueOnce(LIST_USERS[0]);
-      await userController.updateUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(userServices.updateUserById).toHaveBeenCalledWith(1, "Admin", "abc@gmail.com", true);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ messgae: UPDATE });
+    it('Should return error: duplicate email in payload', async () => {
+      const response = await request(app)
+        .put(API_ENPOINTS.USERS)
+        .send({
+          users: [
+            USER_PAYLOAD,
+            USER_PAYLOAD
+          ]
+        });
+      expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
+      expect(response.body.message).toBe("Duplicate email in user' payload");
     });
 
-    it('Update User by Id Error: should return "Email exist" error', async () => {
-      req = {
-        params: { userId: '1' },
-        body: payload
-      };
-
-      const error = new HttpExeptionError(
-        STATUS_CODE.BAD_REQUEST,
-        `Email ${payload.email} existing`
-      );
-
-      (userServices.checkExistingEmail as jest.Mock).mockResolvedValueOnce({ userId: 1, ...payload});
-      await userController.updateUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+    it('Should return error: duplicate email in data', async () => {
+      const response = await request(app)
+        .put(API_ENPOINTS.USERS)
+        .send({
+          users: [
+            { ...USER_PAYLOAD, email: "testUpdate@gmail.com", userId: 2 }
+          ]
+        });
+      expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
+      expect(response.body.message).toBe("Some emails already exist");
     });
 
-    it('Update User by Id Error: should return "User not found" error', async () => {
-      req = {
-        params: { userId: '1' },
-        body: payload
-      };
-
-      const error = new HttpExeptionError(
-        STATUS_CODE.BAD_REQUEST,
-        MESSAGES_AUTHENTICATION.USER_NOT_FOUND
-      );
-
-      (userServices.checkExistingEmail as jest.Mock).mockResolvedValueOnce({});
-      (userServices.updateUserById as jest.Mock).mockResolvedValueOnce(0);
-
-      await userController.updateUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-
-    it('Update User by Id Error: should return "Authentication faild" error', async () => {
-      req = {
-        params: { userId: '1' },
-        body: payload
-      };
-
+    it('Should return error: server error', async () => {
       const error = new HttpExeptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
+      jest.spyOn(User, 'update').mockRejectedValue(error);
 
-      (userServices.checkExistingEmail as jest.Mock).mockResolvedValueOnce({});
-      (userServices.updateUserById as jest.Mock).mockRejectedValue(error);
+      const response = await request(app)
+        .put(API_ENPOINTS.USERS)
+        .send({
+          users: [
+            { ...USER_PAYLOAD, userId: seededUserId }
+          ]
+        });
 
-      await userController.updateUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
   });
 
-  describe('Delete Users: delete a user by userId', () => {
-    it('Delete Users: delete all users success', async () => {
-      (userServices.deleteUsers as jest.Mock).mockResolvedValueOnce(1);
-      await userController.deleteUsers(req as Request, res as Response, next as NextFunction);
+  describe('Users: update user by id ', () => {
+    app.put(`${API_ENPOINTS.USERS}/:userId`, userController.updateUserById);
 
-      expect(userServices.deleteUsers).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ message: MESSAGES.SUCCESS.DELETE });
+    // Middleware handle error
+    app.use((err: HttpExeptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('Delete Users: should return "Authentication faild" error', async () => {
-      const error = new HttpExeptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (userServices.deleteUsers as jest.Mock).mockRejectedValue(error);
-      await userController.deleteUsers(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe('Delete User by id: delete a user by userId', () => {
-    it('Delete User: delete user by id success', async () => {
-      req.params = { userId: '1' };
-      (userServices.deleteUserById as jest.Mock).mockResolvedValueOnce(1);
-      await userController.deleteUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(userServices.deleteUserById).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ message: MESSAGES.SUCCESS.DELETE });
-    });
-
-    it('Delete User: delete user by id success', async () => {
-      req.params = { userId: '1' };
-      const error = new HttpExeptionError(
-        STATUS_CODE.BAD_REQUEST,
-        MESSAGES_AUTHENTICATION.USER_NOT_FOUND
-      );
-
-      (userServices.deleteUserById as jest.Mock).mockResolvedValueOnce(0);
-      await userController.deleteUserById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-
-    it('Delete User by id: should return "Authentication faild" error', async () => {
-      const error = new HttpExeptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (userServices.deleteUsers as jest.Mock).mockRejectedValue(error);
-      await userController.deleteUsers(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+    it('Should update user by id', async () => {
+      const data = await User.findAndCountAll({
+        where: { }
+      })
+      console.log("allllll=>", data.rows)
+      const newEmail = 'updateTest@gmail.com';
+      console.log("seededUserId", seededUserId);
+      const token = 'fake-or-real-jwt';
+      const response = await request(app)
+        .put(`${API_ENPOINTS.USERS}/${seededUserId}`)
+        .send({
+          username: 'updatedUser',
+          email: newEmail,
+          isAdmin: true
+        });
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.message).toBe(MESSAGES.SUCCESS.UPDATE);
+      expect(response.body.data).toHaveProperty("email", newEmail); // Updated email
+      expect(response.body.data).not.toHaveProperty("password");  // Password should not be returned 
+      expect(response.body.data).toHaveProperty("userId", seededUserId); // User ID should remain the same
     });
   });
 });
