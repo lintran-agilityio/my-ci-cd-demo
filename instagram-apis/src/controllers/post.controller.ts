@@ -53,7 +53,7 @@ class PostsController {
       // Valid unique slug
       const slugExiting = await postService.existSlug(slug);
 
-      if (slugExiting) {
+      if (slugExiting && Object.keys(slugExiting).length) {
         next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, this.errorPostMessage.INVALID_SLUG));
       }
 
@@ -61,7 +61,7 @@ class PostsController {
 
       if (!user) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, this.errorPostMessage.USER_NOT_FOUND));
 
-      const dataRes = await postService.create(body);
+      const dataRes = await postService.create({ ...body, authorId: user.userId });
 
       return res.status(STATUS_CODE.CREATED).json({ data: dataRes });
     } catch (error) {

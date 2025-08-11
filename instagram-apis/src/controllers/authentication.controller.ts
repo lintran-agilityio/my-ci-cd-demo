@@ -12,14 +12,14 @@ import {
 
 class AuthenticationController {
   register = async (req: Request, res: Response, next: NextFunction) => {
-    const params = req.body;
+    const payload = req.body;
 
     try {
-      const hasExistUser = await authenticationService.isValidExistUser(params.email);
+      const hasExistUser = await authenticationService.isValidExistUser(payload.email);
 
       if (hasExistUser) return next(new HttpExeptionError(STATUS_CODE.CONFLICT, MESSAGES_AUTHENTICATION.EXIST_USER));
 
-      const dataRes = await authenticationService.create(params);
+      const dataRes = await authenticationService.create(payload);
 
       return res.status(STATUS_CODE.CREATED).json({ data: dataRes });
     } catch (error) {
