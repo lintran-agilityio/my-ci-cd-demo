@@ -1,7 +1,7 @@
 // libs
 import { SuperTest, Test } from "supertest";
 
-import { API_ENPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
+import { API_ENDPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
 import { userRouter } from "@/routes/users.route";
 import { userController } from "@/controllers/user.controller";
 
@@ -51,8 +51,8 @@ describe('User routes for success', () => {
     jest.clearAllMocks();
   });
 
-  it(`GET: ${API_ENPOINTS.USERS} success`, async () => {
-    const res = await requestApp.get(API_ENPOINTS.USERS);
+  it(`GET: ${API_ENDPOINTS.USERS} success`, async () => {
+    const res = await requestApp.get(API_ENDPOINTS.USERS);
 
     expect(userController.getAll).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
@@ -60,8 +60,8 @@ describe('User routes for success', () => {
     expect(res.body.data).toStrictEqual(mockingUsers);
   });
 
-  it(`GET ${API_ENPOINTS.USER_BY_ID} success`, async () => {
-    const res = await requestApp.get(API_ENPOINTS.USER_BY_ID);
+  it(`GET ${API_ENDPOINTS.USER_BY_ID} success`, async () => {
+    const res = await requestApp.get(API_ENDPOINTS.USER_BY_ID);
 
     expect(userController.getUserById).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
@@ -69,34 +69,34 @@ describe('User routes for success', () => {
     expect(res.body.data).toStrictEqual(mockingUsers[0]);
   });
 
-  it(`PUT ${API_ENPOINTS.USER_BY_ID} success`, async () => {
+  it(`PUT ${API_ENDPOINTS.USER_BY_ID} success`, async () => {
     const res = await requestApp
-      .put(API_ENPOINTS.USER_BY_ID)
+      .put(API_ENDPOINTS.USER_BY_ID)
       .send({ username: "abc" });
 
     expect(userController.getUserById).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
   });
 
-  it(`PUT ${API_ENPOINTS.USERS} success`, async () => {
+  it(`PUT ${API_ENDPOINTS.USERS} success`, async () => {
     const res = await requestApp
-      .put(API_ENPOINTS.USERS)
+      .put(API_ENDPOINTS.USERS)
       .send({ email: "abc@gmail.com" })
 
     expect(userController.getUserById).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
   });
 
-  it(`DELETE ${API_ENPOINTS.USERS} success`, async () => {
-    const res = await requestApp.delete(API_ENPOINTS.USERS);
+  it(`DELETE ${API_ENDPOINTS.USERS} success`, async () => {
+    const res = await requestApp.delete(API_ENDPOINTS.USERS);
 
     expect(userController.deleteUsers).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
     expect(res.body.message).toBe(MESSAGES.SUCCESS.DELETE)
   });
 
-  it(`DELETE ${API_ENPOINTS.USER_BY_ID} success`, async () => {
-    const res = await requestApp.delete(API_ENPOINTS.USER_BY_ID);
+  it(`DELETE ${API_ENDPOINTS.USER_BY_ID} success`, async () => {
+    const res = await requestApp.delete(API_ENDPOINTS.USER_BY_ID);
 
     expect(userController.deleteUserById).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);

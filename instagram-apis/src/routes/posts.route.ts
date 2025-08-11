@@ -1,12 +1,12 @@
 // libs
 import { Application, NextFunction } from 'express';
 
-import { API_ENPOINTS } from '@/constants';
+import { API_ENDPOINTS } from '@/constants';
 import { postController } from '@/controllers';
-import { validateToken } from '@/middlewares/validate-token.middleware';
+import validateToken from '@/middlewares/auth.middleware';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 import { createPostSchema, updatePostSchema } from '@/validation';
-import { RequestAuthenType } from '@/types';
+import { RequestAuthenticationType } from '@/types';
 
 export const postsRouter = (app: Application) => {
   /**
@@ -86,7 +86,7 @@ export const postsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.get(
-    API_ENPOINTS.POSTS,
+    API_ENDPOINTS.POSTS,
     validateToken(),
     postController.getAll
   );
@@ -142,7 +142,7 @@ export const postsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.get(
-    API_ENPOINTS.POST_BY_ID,
+    API_ENDPOINTS.POST_BY_ID,
     validateToken(),
     postController.getPostById
   );
@@ -255,7 +255,7 @@ export const postsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.post(
-    API_ENPOINTS.POSTS,
+    API_ENDPOINTS.POSTS,
     validateToken(),
     validateRequest(createPostSchema, 'body'),
     postController.createPostByUser
@@ -369,7 +369,7 @@ export const postsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.put(
-    API_ENPOINTS.USERS_POST_ID,
+    API_ENDPOINTS.USERS_POST_ID,
     validateToken(),
     validateRequest(updatePostSchema, 'body'),
     postController.putUsersPostById
@@ -396,7 +396,7 @@ export const postsRouter = (app: Application) => {
  *         $ref: '#/components/responses/InternalServerError'
  */
   app.delete(
-    API_ENPOINTS.POSTS,
+    API_ENDPOINTS.POSTS,
     validateToken(true),
     postController.deletePosts
   );
@@ -433,8 +433,8 @@ export const postsRouter = (app: Application) => {
    *         description: Internal server error
    */
   app.delete(
-    API_ENPOINTS.USERS_POST_ID,
+    API_ENDPOINTS.USERS_POST_ID,
     validateToken(),
-    (req: RequestAuthenType, res, next: NextFunction) => postController.deleteUsersPostById(req, res, next)
+    (req: RequestAuthenticationType, res, next: NextFunction) => postController.deleteUsersPostById(req, res, next)
   )
 };

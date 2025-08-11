@@ -1,8 +1,8 @@
 // libs
 import { Application } from 'express';
 
-import { API_ENPOINTS } from '@/constants';
-import { authenticationControler } from '@/controllers';
+import { API_ENDPOINTS } from '@/constants';
+import { authenticationController } from '@/controllers';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 import { registerSchema, loginSchema } from '@/validation';
 
@@ -43,7 +43,7 @@ export const authenticationRouter = (app: Application) => {
 	 *       500:
 	 *         description: Server error
 	 */
-	app.post(API_ENPOINTS.REGISTER, validateRequest(registerSchema, 'body'), authenticationControler.register);
+	app.post(API_ENDPOINTS.REGISTER, validateRequest(registerSchema, 'body'), authenticationController.register);
 
 	/**
 	 * @openapi
@@ -79,5 +79,5 @@ export const authenticationRouter = (app: Application) => {
 	 *       500:
 	 *         description: Server error
 	 */
-	app.post(API_ENPOINTS.LOGIN, validateRequest(loginSchema, 'body'), authenticationControler.login);
+	app.post(API_ENDPOINTS.LOGIN, validateRequest(loginSchema, 'body'), authenticationController.login);
 };

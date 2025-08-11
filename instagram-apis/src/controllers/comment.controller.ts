@@ -4,27 +4,10 @@ import { NextFunction, Request, Response } from "express";
 import { MESSAGES, PAGINATION, STATUS_CODE } from "@/constants";
 import { commentServices, postService } from "@/services";
 import { logger, toError } from "@/utils";
-import HttpExeptionError from "@/exceptions";
-import { RequestAuthenType } from "@/types";
+import HttpExceptionError from "@/exceptions";
+import { RequestAuthenticationType } from "@/types";
 
 class CommentsController {
-  getAll = async(req: Request, res: Response, next: NextFunction) => {
-    const { DEFAULT: { OFFSET, LIMIT } } = PAGINATION;
-    const { offset =  OFFSET, limit = LIMIT } = req.query;
-    const limitNumber = Number(limit);
-    const offsetNumber = Number(offset);
-
-    try {
-      const dataRes = await commentServices.getAll(offsetNumber, limitNumber);
-      return res.status(STATUS_CODE.OK).json({ data: dataRes });
-    } catch (error) {
-      const { message } = toError(error);
-      logger.error(message);
-      
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
-    }
-  };
-
   getPostsComment = async(req: Request, res: Response, next: NextFunction) => {
     const { DEFAULT: { OFFSET, LIMIT } } = PAGINATION;
     const { offset =  OFFSET, limit = LIMIT } = req.query;
@@ -40,7 +23,7 @@ class CommentsController {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -52,18 +35,18 @@ class CommentsController {
     try {
       const dataRes = await commentServices.getPostsCommentById(commentIdNumber, postId);
 
-      if (!dataRes) return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND));
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND));
 
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
-  postPostsComments = async(req: RequestAuthenType, res: Response, next: NextFunction) => {
+  postPostsComments = async(req: RequestAuthenticationType, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const { content } = req.body;
     const userId = req.userId || 0;
@@ -71,7 +54,7 @@ class CommentsController {
 
     try {
       const post = await postService.get(postId);
-      if (!post) return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
+      if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
 
       const dataRes = await commentServices.create({
         postId,
@@ -84,36 +67,39 @@ class CommentsController {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
-  deletePostsComments = async(req: RequestAuthenType, res: Response, next: NextFunction) => {
+  deletePostsComments = async(req: RequestAuthenticationType, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const postId = Number(id);
-
     try {
-      await commentServices.deletePostsComments(postId);
+      console.log("postId", postId);
+      const dataRes = await commentServices.deletePostsComments(postId);
+      if (dataRes === 0) {
+        return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
+      }
 
       res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
-  deletePostsCommentById = async(req: RequestAuthenType, res: Response, next: NextFunction) => {
+  deletePostsCommentById = async(req: RequestAuthenticationType, res: Response, next: NextFunction) => {
     const { id, commentId } = req.params;
     const postId = Number(id);
     const commentNumberId = Number(commentId);
 
     try {
       const deletedCount = await commentServices.deletePostsCommentById(postId, commentNumberId);
-
+console.log("deletedCount", deletedCount);
       if (deletedCount === 0) {
-        return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
+        return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
       }
 
       return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE, data: deletedCount });
@@ -121,7 +107,7 @@ class CommentsController {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   }
 };

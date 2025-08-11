@@ -1,11 +1,11 @@
 // libs
 import { SuperTest, Test } from "supertest";
-import { API_ENPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
+import { API_ENDPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
 import { MOCKS_POSTS } from "@/mocks/posts";
 
 const { UPDATE, ADD } = MESSAGES.SUCCESS;
 
-jest.mock('@/middlewares/validate-token.middleware', () => ({
+jest.mock('@/middlewares/auth.middleware', () => ({
   __esModule: true,
   validateToken: (isValidAdmin?: boolean) => {
     return (req: any, res: any, next: any) => {
@@ -85,25 +85,25 @@ describe('Posts routes for success', () => {
     jest.clearAllMocks();
   });
 
-  it(`GET: ${API_ENPOINTS.POSTS} success`, async () => {
-    const res = await requestApp.get(API_ENPOINTS.POSTS);
+  it(`GET: ${API_ENDPOINTS.POSTS} success`, async () => {
+    const res = await requestApp.get(API_ENDPOINTS.POSTS);
 
     expect(postController.getAll).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
     expect(res.body.data).toStrictEqual(MOCKS_POSTS);
   });
 
-  it(`GET: ${API_ENPOINTS.POST_BY_ID} success`, async () => {
-    const res = await requestApp.get(API_ENPOINTS.POST_BY_ID.replace(':id', '1'));
+  it(`GET: ${API_ENDPOINTS.POST_BY_ID} success`, async () => {
+    const res = await requestApp.get(API_ENDPOINTS.POST_BY_ID.replace(':id', '1'));
 
     expect(postController.getPostById).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.OK);
     expect(res.body.message).toBe(ADD);
   });
 
-  it(`POST: ${API_ENPOINTS.POSTS} create a post`, async () => {
+  it(`POST: ${API_ENDPOINTS.POSTS} create a post`, async () => {
     const res = await requestApp
-      .post(API_ENPOINTS.POSTS)
+      .post(API_ENDPOINTS.POSTS)
       .send({
         title: "Post 1",
         slug: "post-1",
@@ -117,8 +117,8 @@ describe('Posts routes for success', () => {
     expect(res.body.message).toBe(ADD);
   });
 
-  it(`PUT: ${API_ENPOINTS.USERS_POST_ID} update a post`, async () => {
-    const path = API_ENPOINTS.USERS_POST_ID.replace(':userId', '1').replace(':id', '1');
+  it(`PUT: ${API_ENDPOINTS.USERS_POST_ID} update a post`, async () => {
+    const path = API_ENDPOINTS.USERS_POST_ID.replace(':userId', '1').replace(':id', '1');
 
     const res = await requestApp
       .put(path)
@@ -134,15 +134,15 @@ describe('Posts routes for success', () => {
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
   });
 
-  it(`DELETE: ${API_ENPOINTS.POSTS} delete all posts`, async () => {
-    const res = await requestApp.delete(API_ENPOINTS.POSTS);
+  it(`DELETE: ${API_ENDPOINTS.POSTS} delete all posts`, async () => {
+    const res = await requestApp.delete(API_ENDPOINTS.POSTS);
 
     expect(postController.deletePosts).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);
   });
 
-  it(`DELET ${API_ENPOINTS.USERS_POST_ID} delete users post by id success`, async () => {
-    const res = await requestApp.delete(API_ENPOINTS.USERS_POST_ID);
+  it(`DELET ${API_ENDPOINTS.USERS_POST_ID} delete users post by id success`, async () => {
+    const res = await requestApp.delete(API_ENDPOINTS.USERS_POST_ID);
 
     expect(postController.deletePosts).toHaveBeenCalled();
     expect(res.status).toBe(STATUS_CODE.NO_CONTENT);

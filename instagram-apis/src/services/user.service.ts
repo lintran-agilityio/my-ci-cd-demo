@@ -30,26 +30,27 @@ class UserServices {
   };
 
   updateUserById = async (userId: number, username: string, email: string, isAdmin: boolean) => {
-    const res = await User.update(
-      { username, email, isAdmin },
-      {
-        where: { userId }
-      }
-    );
 
-    return res[0];
+    try {
+      const res = await User.update(
+        { username, email, isAdmin },
+        { where: { userId } }
+      );
+
+      return res[0];
+    } catch (error) {
+      throw error;
+    }
   };
 
   checkExistingEmail = async (userId: number, email: string) => {
     try {
-      const existingEmail = await User.findOne({
+      return await User.findOne({
         where: {
           email,
           userId: { [Op.ne]: userId }, // id khác user đang update
         },
       });
-
-      return existingEmail;
     } catch (error: unknown) {
       throw error
     }
@@ -57,8 +58,6 @@ class UserServices {
 
   checkExistingEmails = async (users: IUser[], userEmails: string[]) => {
     try {
-      if (userEmails.length === 0) return [];
-
       const existingEmailData = await User.findAll({
         where: {
           email: { [Op.in]: userEmails }

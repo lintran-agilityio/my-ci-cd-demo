@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import { userServices } from "@/services";
 import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from "@/constants";
 import { logger, toError } from "@/utils";
-import HttpExeptionError from "@/exceptions";
+import HttpExceptionError from "@/exceptions";
 import { IUser } from "@/types";
 
 class UsersController {
@@ -21,7 +21,7 @@ class UsersController {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -31,12 +31,14 @@ class UsersController {
     try {
       const userIdNumber = Number(userId);
       const dataRes = await userServices.getUserById(userIdNumber);
+
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
         
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -49,7 +51,7 @@ class UsersController {
       const emailNoDuplicate = new Set(userEmails);
 
       if (emailNoDuplicate.size !== userEmails.length) {
-        return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, "Duplicate email in user' payload"))
+        return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, "Duplicate email in user' payload"))
       }
 
       // Valid email' unique in DB
@@ -63,10 +65,10 @@ class UsersController {
           })
         }
       }
-
       const dataRes = await userServices.updateUsers(users);
+
       if (dataRes && dataRes.length === 0) {
-        return next(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
+        return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
       }
 
       return res.status(STATUS_CODE.OK).json({
@@ -77,7 +79,7 @@ class UsersController {
       const { message } = toError(error);
       logger.error(message);
 
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -87,25 +89,29 @@ class UsersController {
 
     try {
       const userIdNumber = Number(userId);
-
       if (email) {
         const existingEmail = await userServices.checkExistingEmail(userIdNumber, email);
-
         if (existingEmail && Object.keys(existingEmail).length) {
-          next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, `Email ${email} existing`));
+          return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, `Email ${email} existing`));
         }
       }
-
+      
       const dataRes = await userServices.updateUserById(userIdNumber, username, email, isAdmin);
 
-      if (dataRes === 0) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+
+      // fetch updated user
+      const updatedUser = await userServices.getUserById(userIdNumber);
       
-      return res.status(STATUS_CODE.OK).json({ messgae: MESSAGES.SUCCESS.UPDATE });
+      return res.status(STATUS_CODE.OK).json({
+        message: MESSAGES.SUCCESS.UPDATE,
+        data: updatedUser
+      });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -118,7 +124,7 @@ class UsersController {
       const { message } = toError(error);
       logger.error(message);
 
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -129,14 +135,14 @@ class UsersController {
       const userIdNumber = Number(userId);
       const dataRes = await userServices.deleteUserById(userIdNumber);
 
-      if (dataRes === 0) return next(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (dataRes === 0) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
       
       return res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
 
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 };

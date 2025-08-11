@@ -32,6 +32,8 @@ export const generateToken = {
 
     decodeToken: (token: string) => {
         try {
+            console.log("decodeToken", token);
+            console.log("JWT_SECRET", jwt.decode(token, JWT_SECRET));
             return jwt.decode(token, JWT_SECRET);
         } catch (error) {
             throw error;

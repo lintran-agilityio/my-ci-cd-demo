@@ -17,7 +17,7 @@ export type ResponseErrorType = {
   response: Response
 };
 
-export interface RequestAuthenType extends Request {
+export interface RequestAuthenticationType extends Request {
   userId?: number;
   isAdmin?: boolean;
 };
