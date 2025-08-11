@@ -1,7 +1,7 @@
 // libs
 import { Application } from 'express';
 
-import { API_ENPOINTS } from '@/constants';
+import { API_ENDPOINTS } from '@/constants';
 import { userController } from '@/controllers';
 import { userUpdateSchema, userSchema, usersUpdateSchema } from '@/validation';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
@@ -35,7 +35,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.get(API_ENPOINTS.USERS, userController.getAll);
+  app.get(API_ENDPOINTS.USERS, userController.getAll);
 
   /**
    * @openapi
@@ -72,7 +72,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.get(API_ENPOINTS.USER_BY_ID, validateRequest(userSchema, 'params'), userController.getUserById);
+  app.get(API_ENDPOINTS.USER_BY_ID, validateRequest(userSchema, 'params'), userController.getUserById);
 
   /**
    * @openapi
@@ -110,7 +110,7 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.put(API_ENPOINTS.USER_BY_ID, validateRequest(userUpdateSchema, 'body'), userController.updateUserById);
+  app.put(API_ENDPOINTS.USER_BY_ID, validateRequest(userUpdateSchema, 'body'), userController.updateUserById);
 
   /**
    * @api {put} /api/v1/users Update multiple users
@@ -159,7 +159,7 @@ export const userRouter = (app: Application) => {
    * @apiError (400) BadRequest Invalid request body format or missing required fields
    * @apiError (500) InternalServerError Server error
    */
-  app.put(API_ENPOINTS.USERS, validateRequest(usersUpdateSchema, 'body'), userController.updateUsers);
+  app.put(API_ENDPOINTS.USERS, validateRequest(usersUpdateSchema, 'body'), userController.updateUsers);
 
   /**
    * @api {delete} /api/v1/users Delete multiple users
@@ -185,7 +185,7 @@ export const userRouter = (app: Application) => {
    *
    * @apiError (500) InternalServerError Server error
    */
-  app.delete(API_ENPOINTS.USERS, userController.deleteUsers);
+  app.delete(API_ENDPOINTS.USERS, userController.deleteUsers);
 
   /**
    * @openapi
@@ -208,5 +208,5 @@ export const userRouter = (app: Application) => {
    *       500:
    *         description: Internal server error
    */
-  app.delete(API_ENPOINTS.USER_BY_ID, userController.deleteUserById)
+  app.delete(API_ENDPOINTS.USER_BY_ID, userController.deleteUserById)
 };

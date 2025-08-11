@@ -2,14 +2,14 @@
 import request from "supertest";
 import express, { Application } from "express"
 
-import { authenticationControler } from "@/controllers";
+import { authenticationController } from "@/controllers";
 import { authenticationRouter } from "@/routes/authetication.route";
-import { API_ENPOINTS, STATUS_CODE, MESSAGES_AUTHENTICATION } from "@/constants";
+import { API_ENDPOINTS, STATUS_CODE, MESSAGES_AUTHENTICATION } from "@/constants";
 
 const { SUCCESSFUL } = MESSAGES_AUTHENTICATION;
 
 jest.mock('@/controllers/authentication.controller', () => ({
-  authenticationControler: {
+  authenticationController: {
     login: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ message: SUCCESSFUL })),
     register: jest.fn((_req, res) => res.status(STATUS_CODE.OK).json({ message: SUCCESSFUL })),
   }
@@ -29,22 +29,22 @@ describe('Authentication routes for authen success ', () => {
     jest.clearAllMocks();
   });
 
-  it(`POST: ${API_ENPOINTS.LOGIN} success`, async () => {
+  it(`POST: ${API_ENDPOINTS.LOGIN} success`, async () => {
     const response = await request(app)
-      .post(API_ENPOINTS.LOGIN)
+      .post(API_ENDPOINTS.LOGIN)
       .send({ email: 'abc@gmail.com', password: 'AbC@322d7' });
 
-    expect(authenticationControler.login).toHaveBeenCalled();
+    expect(authenticationController.login).toHaveBeenCalled();
     expect(response.status).toBe(STATUS_CODE.OK);
     expect(response.body.message).toBe(SUCCESSFUL);
   });
 
-  it(`POST: ${API_ENPOINTS.REGISTER} success`, async () => {
+  it(`POST: ${API_ENDPOINTS.REGISTER} success`, async () => {
     const response = await request(app)
-      .post(API_ENPOINTS.REGISTER)
+      .post(API_ENDPOINTS.REGISTER)
       .send({ email: 'abc@gmail.com', password: 'AbC@322d7', username: 'admin', isAdmin: true });
 
-    expect(authenticationControler.register).toHaveBeenCalled();
+    expect(authenticationController.register).toHaveBeenCalled();
     expect(response.status).toBe(STATUS_CODE.OK);
     expect(response.body.message).toBe(SUCCESSFUL);
   });

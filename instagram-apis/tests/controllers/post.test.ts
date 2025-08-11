@@ -6,9 +6,26 @@ import { postController } from "@/controllers";
 import { postService, userServices } from '@/services';
 import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from '@/constants';
 import { MOCKS_POSTS } from '@/mocks';
-import HttpExeptionError from '@/exceptions';
+import HttpExceptionError from '@/exceptions';
 
 jest.mock('@/services');
+jest.mock('jwt-simple', () => ({
+  __esModule: true,
+  ...jest.requireActual('jwt-simple'),
+  decode: jest.fn(),
+  encode: jest.fn()
+}));
+
+jest.mock('@/middlewares/auth.middleware', () => ({
+  __esModule: true,
+  default: jest.fn(() => {
+    return (req: any, res: any, next: any) => {
+      req.userId = 1;
+      req.isAdmin = true;
+      next();
+    };
+  }),
+}));
 
 describe('Post controller', () => {
   let req: Partial<Request>;
@@ -64,7 +81,7 @@ describe('Post controller', () => {
     });
 
     it('should handle error when getting all posts', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -89,7 +106,7 @@ describe('Post controller', () => {
     });
 
     it('should handle error when getting post by ID', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -120,7 +137,7 @@ describe('Post controller', () => {
       await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
 
       expect(postService.existSlug).toHaveBeenCalledWith(req.body.slug);
-      expect(next).toHaveBeenCalledWith(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.INVALID_SLUG));
+      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.INVALID_SLUG));
     });
 
     it('should handle error when creating a post with non-existing user', async () => {
@@ -130,11 +147,11 @@ describe('Post controller', () => {
       await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
 
       expect(userServices.getUserById).toHaveBeenCalledWith(req.body.authorId);
-      expect(next).toHaveBeenCalledWith(new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.USER_NOT_FOUND));
+      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.USER_NOT_FOUND));
     });
 
     it('should handle error when creating a post', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -167,7 +184,7 @@ describe('Post controller', () => {
       await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
 
       expect(userServices.getUserById).toHaveBeenCalledWith(1);
-      expect(next).toHaveBeenCalledWith(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
     });
 
     it('should handle error when updating a post with non-existing post', async () => {
@@ -177,11 +194,11 @@ describe('Post controller', () => {
       await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
 
       expect(postService.getPostByAuthorId).toHaveBeenCalledWith(1, 1);
-      expect(next).toHaveBeenCalledWith(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND_OWNED_USER));
+      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND_OWNED_USER));
     });
 
     it('should handle error something conflict when updating a post', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.CONFLICT,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -191,7 +208,7 @@ describe('Post controller', () => {
     }); 
 
     it('should handle error when updating a post', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -213,7 +230,7 @@ describe('Post controller', () => {
     });
 
     it('should handle error when deleting posts', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
@@ -243,11 +260,11 @@ describe('Post controller', () => {
       await postController.deleteUsersPostById(req as Request, res as Response, next as NextFunction);
 
       expect(postService.getPostByAuthorId).toHaveBeenCalledWith(1, 1);
-      expect(next).toHaveBeenCalledWith(new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
+      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
     });
 
     it('should handle error when deleting a user\'s post', async () => {
-      const error = new HttpExeptionError(
+      const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );

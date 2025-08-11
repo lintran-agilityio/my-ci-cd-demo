@@ -39,7 +39,6 @@ class UserServices {
 
       return res[0];
     } catch (error) {
-      console.error('Error updating user:', error);
       throw error;
     }
   };
@@ -59,8 +58,6 @@ class UserServices {
 
   checkExistingEmails = async (users: IUser[], userEmails: string[]) => {
     try {
-      if (userEmails.length === 0) return [];
-
       const existingEmailData = await User.findAll({
         where: {
           email: { [Op.in]: userEmails }

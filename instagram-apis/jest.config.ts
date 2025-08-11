@@ -1,5 +1,4 @@
-import { JestConfigWithTsJest, pathsToModuleNameMapper } from 'ts-jest';
-import { compilerOptions } from './tsconfig.json';
+import { JestConfigWithTsJest } from 'ts-jest';
 
 const config: JestConfigWithTsJest = {
   verbose: true,
@@ -35,9 +34,10 @@ const config: JestConfigWithTsJest = {
     '<rootDir>/src/server.ts',
     '<rootDir>/src/apiDoc/swapper.ts',
     '<rootDir>/src/app.ts',
-    '<rootDir>/src/db/**.*',
-    '<rootDir>/src/logs/**.*',
+    '<rootDir>/src/db/.*',
+    '<rootDir>/src/logs/.*',
   ],
+  roots: ['<rootDir>/tests'],
 };
 
 export default config;

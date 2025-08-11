@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { STATUS_CODE, MESSAGES_AUTHENTICATION } from '@/constants';
 import { authenticationService } from '@/services';
-import HttpExeptionError from '@/exceptions';
+import HttpExceptionError from '@/exceptions';
 import {
   generateToken,
   logger,
@@ -17,7 +17,7 @@ class AuthenticationController {
     try {
       const hasExistUser = await authenticationService.isValidExistUser(payload.email);
 
-      if (hasExistUser) return next(new HttpExeptionError(STATUS_CODE.CONFLICT, MESSAGES_AUTHENTICATION.EXIST_USER));
+      if (hasExistUser) return next(new HttpExceptionError(STATUS_CODE.CONFLICT, MESSAGES_AUTHENTICATION.EXIST_USER));
 
       const dataRes = await authenticationService.create(payload);
 
@@ -26,7 +26,7 @@ class AuthenticationController {
       const { message } = toError(error);
       logger.error(message);
 
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
 
@@ -35,8 +35,7 @@ class AuthenticationController {
 
     try {
       const dataRes = await authenticationService.login(params);
-
-      if (!dataRes) return next(new HttpExeptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD));
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD));
 
       // generate token
       const token = generateToken.accessToken(dataRes);
@@ -46,9 +45,9 @@ class AuthenticationController {
       const { message } = toError(error);
       logger.error(message);
       
-      next(new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
+      next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   }
 }
 
-export const authenticationControler = new AuthenticationController();
+export const authenticationController = new AuthenticationController();

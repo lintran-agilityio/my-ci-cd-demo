@@ -13,3 +13,5 @@ describe("Authentication Service", () => {
       const mockUser = { id: 1, email: ""};
       (User.findOne as jest.Mock).mockResolvedValue(mockUser);
     });
+  });
+});

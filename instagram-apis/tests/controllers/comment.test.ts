@@ -1,192 +1,230 @@
 // libs
 import 'jest';
-import { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, Response, Express } from 'express';
+import bodyParser from 'body-parser';
+import request from 'supertest';
 
-import { commentController } from "@/controllers";
-import { postService, commentServices } from '@/services';
-import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from '@/constants';
-import { MOCKS_COMMENTS_INCLUDE_POST_USER, MOCKS_POSTS } from '@/mocks';
-import HttpExeptionError from '@/exceptions';
+jest.mock('jwt-simple', () => ({
+  __esModule: true,
+  ...jest.requireActual('jwt-simple'),
+  decode: jest.fn(),
+  encode: jest.fn()
+}));
 
-describe('Post controller', () => {
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: Partial<NextFunction>;
-  const { OFFSET, LIMIT } = PAGINATION.DEFAULT;
-  const { UPDATE } = MESSAGES.SUCCESS;
-
-  beforeEach(() => {
-    req = {
-      query: {
-        offset: OFFSET.toString(),
-        limit: LIMIT.toString(),
-      },
-      params: {
-        userId: '1',
-        id: '1',
-        commentId: '8'
-      },
-      body: {
-        content: 'This is a comment',
-        postId: 1,
-        authorId: 0
-      }
+jest.mock('@/middlewares/auth.middleware', () => ({
+  __esModule: true,
+  default: jest.fn(() => {
+    return (req: any, res: any, next: any) => {
+      req.userId = 1;
+      req.isAdmin = true;
+      next();
     };
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    };
+  }),
+}));
 
-    next = jest.fn();
+import { sequelize } from "@/configs";
+import HttpExceptionError from '@/exceptions';
+import { API_ENDPOINTS, MESSAGES, MESSAGES_AUTHENTICATION, STATUS_CODE } from '@/constants';
+import { commentController } from '@/controllers';
+import { Comment, Post } from '@/models';
+import { MOCKS_POSTS } from '@/mocks';
+import validateToken from '@/middlewares/auth.middleware';
+import { generateToken } from '@/utils';
+
+const app: Express = express();
+app.use(bodyParser.json());
+
+describe('Comments controller', () => {
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
-    
+    await Comment.destroy({ where: {} });
+    await Post.destroy({ where: {} });
   });
 
-  describe('Get Post\'s comments', () => {
-    it('should return post\'s comments', async () => {
-      (commentServices.getPostsComment as jest.Mock) = jest.fn();
-      (commentServices.getPostsComment as jest.Mock).mockResolvedValueOnce(MOCKS_COMMENTS_INCLUDE_POST_USER);
-
-      await commentController.getPostsComment(req as Request, res as Response, next as NextFunction);
-
-      expect(commentServices.getPostsComment).toHaveBeenCalledWith(0, 10, 1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data: MOCKS_COMMENTS_INCLUDE_POST_USER });
-    });
-
-    it('should handle error when get post\'s comments', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
-      (commentServices.getPostsComment as jest.Mock).mockRejectedValueOnce(error);
-
-      await commentController.getPostsComment(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
+  afterAll(async () => {
+    await sequelize.close();
   });
+  
+  describe('Comments: Get comments of post', () => {
+    app.get(API_ENDPOINTS.POST_COMMENTS, commentController.getPostsComment);
 
-  describe('Get Post\'s comment by ID', () => {
-    it('should return post\'s comment by ID', async () => {
-      (commentServices.getPostsCommentById as jest.Mock) = jest.fn();
-      (commentServices.getPostsCommentById as jest.Mock).mockResolvedValueOnce(MOCKS_COMMENTS_INCLUDE_POST_USER[0]);
-
-      await commentController.getPostsCommentById(req as Request, res as Response, next as NextFunction);
-
-      expect(commentServices.getPostsCommentById).toHaveBeenCalledWith(8, 1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data: MOCKS_COMMENTS_INCLUDE_POST_USER[0] });
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('should handle error when get post\'s comment by ID', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND);
-      (commentServices.getPostsCommentById as jest.Mock).mockRejectedValueOnce(error);
+    it('Should get post comments: return comments', async () => {
+      jest.spyOn(Comment, "findAndCountAll").mockResolvedValue({
+        count: 2,
+        rows: MOCKS_POSTS,
+      } as any);      
+      const response = await request(app)
+        .get(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .query({ offset: 0, limit: 10 });
 
-      await commentController.getPostsCommentById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-
-    it('should handle error Authentication faild when get post\'s comment by ID', async () => {
-      const error = new HttpExeptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (commentServices.getPostsCommentById as jest.Mock).mockRejectedValueOnce(error);
-
-      await commentController.getPostsCommentById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe('Create Post\'s comment', () => {
-    it('should create a post\'s comment', async () => {
-      (postService.get as jest.Mock) = jest.fn();
-      (postService.get as jest.Mock).mockResolvedValueOnce(MOCKS_POSTS[0]);
-      (commentServices.create as jest.Mock) = jest.fn();
-      (commentServices.create as jest.Mock).mockResolvedValueOnce(MOCKS_COMMENTS_INCLUDE_POST_USER[0]);
-
-      await commentController.postPostsComments(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.get).toHaveBeenCalledWith(1);
-      expect(commentServices.create).toHaveBeenCalledWith({
-        postId: 1,
-        authorId: 0,
-        content: req.body.content
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data).toEqual({
+        data: MOCKS_POSTS,
+        meta: {
+          pagination: {
+            offset: 0,
+            limit: 10,
+            total: 2,
+          }
+        }
       });
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.CREATED);
-      expect(res.json).toHaveBeenCalledWith({ data: MOCKS_COMMENTS_INCLUDE_POST_USER[0] });
     });
 
-    it('should handle error when creating a post\'s comment', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND);
-      (postService.get as jest.Mock).mockRejectedValueOnce(error);
+    it('Should return error: internal server error', async () => {
+      const errorMessage = MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, errorMessage);
+      jest.spyOn(Comment, "findAndCountAll").mockRejectedValue(error);
 
-      await commentController.postPostsComments(req as Request, res as Response, next as NextFunction);
+      const response = await request(app)
+        .get(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .query({ offset: 0, limit: 10 });
 
-      expect(next).toHaveBeenCalledWith(error);
-    });
-
-    it('should handle error Authentication faild when creating a post\'s comment', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
-      (postService.get as jest.Mock).mockRejectedValueOnce(error);
-
-      await commentController.postPostsComments(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(errorMessage);
     });
   });
 
-  describe('Delete Post\'s comments', () => {
-    it('should delete post\'s comments', async () => {
-      (commentServices.deletePostsComments as jest.Mock) = jest.fn();
-      (commentServices.deletePostsComments as jest.Mock).mockResolvedValueOnce(1);
+  describe('Comments: Get comment by ID', () => {
+    app.get(API_ENDPOINTS.POST_COMMENT_BY_ID, commentController.getPostsCommentById);
 
-      await commentController.deletePostsComments(req as Request, res as Response, next as NextFunction);
-
-      expect(commentServices.deletePostsComments).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NO_CONTENT);
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('should handle error when deleting post\'s comments', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
-      (commentServices.deletePostsComments as jest.Mock).mockRejectedValueOnce(error);
+    it('Should get post comment by ID: return comment', async () => {
+      jest.spyOn(Comment, "findOne").mockResolvedValue(MOCKS_POSTS[0] as any);
+      const response = await request(app)
+        .get(API_ENDPOINTS.POST_COMMENT_BY_ID.replace(':id', '1').replace(':commentId', '1'));
 
-      await commentController.deletePostsComments(req as Request, res as Response, next as NextFunction);
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data).toEqual(MOCKS_POSTS[0]);
+    });
 
-      expect(next).toHaveBeenCalledWith(error);
+    it('Should return error: comment not found', async () => {
+      const errorMessage = MESSAGES.ERRORS.COMMENT.NOT_FOUND;
+      const error = new HttpExceptionError(STATUS_CODE.NOT_FOUND, errorMessage);
+      jest.spyOn(Comment, "findOne").mockResolvedValue(null);
+
+      const response = await request(app)
+        .get(API_ENDPOINTS.POST_COMMENT_BY_ID.replace(':id', '1').replace(':commentId', '1'));
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(errorMessage);
+    });
+
+    it('Should return error: internal server error', async () => {
+      const errorMessage = MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR;
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, errorMessage);
+      jest.spyOn(Comment, "findOne").mockRejectedValue(error);
+
+      const response = await request(app)
+        .get(API_ENDPOINTS.POST_COMMENT_BY_ID.replace(':id', '1').replace(':commentId', '1'));
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(errorMessage);
     });
   });
 
-  describe('Delete Post\'s comment by ID', () => {
-    it('should delete post\'s comment by ID', async () => {
-      (commentServices.deletePostsCommentById as jest.Mock) = jest.fn();
-      (commentServices.deletePostsCommentById as jest.Mock).mockResolvedValueOnce(1);
+  describe('Comments: Create comment for post', () => {
+    app.post(API_ENDPOINTS.POST_COMMENTS, commentController.postPostsComments);
 
-      await commentController.deletePostsCommentById(req as Request, res as Response, next as NextFunction);
-
-      expect(commentServices.deletePostsCommentById).toHaveBeenCalledWith(1, 8);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NO_CONTENT); 
-      expect(res.json).toHaveBeenCalledWith({ data: 1, message: MESSAGES.SUCCESS.DELETE });
-    });
-    it('should handle error when deleting post\'s comment by ID', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST);
-      (commentServices.deletePostsCommentById as jest.Mock).mockRejectedValueOnce(error);
-
-      await commentController.deletePostsCommentById(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('should handle error authen when deleting post\'s comments', async () => {
-      const error = new HttpExeptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
-      (commentServices.deletePostsCommentById as jest.Mock).mockRejectedValueOnce(error);
+    it('Should create post comment: return created comment', async () => {
+      jest.spyOn(Post, "findOne").mockResolvedValue(MOCKS_POSTS[0] as any);
+      jest.spyOn(Comment, "create").mockResolvedValue(MOCKS_POSTS[0] as any);
 
-      await commentController.deletePostsCommentById(req as Request, res as Response, next as NextFunction);
+      const response = await request(app)
+        .post(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .send({ content: 'This is a comment' });
 
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.CREATED);
+      expect(response.body.data).toEqual(MOCKS_POSTS[0]);
+    });
+
+    it('Should return error: post not found', async () => {
+      const errorMessage = MESSAGES.ERRORS.POST.NOT_FOUND;
+      const error = new HttpExceptionError(STATUS_CODE.NOT_FOUND, errorMessage);
+      jest.spyOn(Post, "findOne").mockResolvedValue(null);
+
+      const response = await request(app)
+        .post(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .send({ content: 'This is a comment' });
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(errorMessage);
+    });
+
+    it('Should return error: internal server error', async () => {
+      const errorMessage = MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR;
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, errorMessage);
+      jest.spyOn(Post, "findOne").mockRejectedValue(error);
+
+      const response = await request(app)
+        .post(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .send({ content: 'This is a comment' });
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(errorMessage);
+    });
+  });
+
+  describe('Comments: Delete comment for post', () => {
+    
+    beforeEach(() => {
+      jest.spyOn(generateToken, 'decodeToken').mockReturnValue({
+        exp: Math.floor(Date.now() / 1000) + 60,
+        isAdmin: true,
+        userId: 1
+      });
+      app.delete(API_ENDPOINTS.POST_COMMENTS, validateToken(), commentController.deletePostsComments);
+      
+      // Middleware handle error
+      app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+        res.status(err.status || 500).json({ message: err.message });
+      });
+    });
+
+    afterAll(async () => {
+      jest.restoreAllMocks();
+    });
+
+    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsImVtYWlsIjoibGluKzNAZ20uY29tIiwidXNlcm5hbWUiOiJsaW50cmFuIiwiaXNBZG1pbiI6ZmFsc2UsImV4cCI6MTc1NDkwMjczNX0.k_Qw9EFjykTYm3Y2RE3NZLv6GkQx7dod8Gh5jyxK4-k';
+    it('Should delete post comment: return success message', async () => {
+      
+      jest.spyOn(Comment, "destroy").mockResolvedValue(1);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(STATUS_CODE.NO_CONTENT);
+    });
+
+    it('Should return error: comment not found', async () => {
+
+      const errorMessage = MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST;
+      jest.spyOn(Comment, "destroy").mockResolvedValue(0);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(errorMessage);
     });
   });
 });

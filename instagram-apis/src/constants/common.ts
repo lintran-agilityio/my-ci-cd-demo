@@ -24,7 +24,7 @@ export const STATUS_CODE = {
 
 export const API_PREFIX = '/api/v1';
 
-export const API_ENPOINTS = {
+export const API_ENDPOINTS = {
   REGISTER: `${API_PREFIX}/auth/register`,
   LOGIN: `${API_PREFIX}/auth/login`,
   USERS: `${API_PREFIX}/users`,

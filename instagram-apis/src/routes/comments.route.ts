@@ -1,19 +1,13 @@
 // libs
 import { Application } from 'express';
 
-import { API_ENPOINTS } from '@/constants';
+import { API_ENDPOINTS } from '@/constants';
 import { commentController } from '@/controllers';
 import { createCommentSchema } from '@/validation';
-import { validateToken } from '@/middlewares/validate-token.middleware';
+import validateToken from '@/middlewares/auth.middleware';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 
 export const commentsRouter = (app: Application) => {
-  app.get(
-    API_ENPOINTS.COMMENTS,
-    validateToken(),
-    commentController.getAll
-  ),
-
   /**
    * @openapi
    * /api/v1/posts/{postId}/comments:
@@ -59,7 +53,7 @@ export const commentsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.get(
-    API_ENPOINTS.POST_COMMENTS,
+    API_ENDPOINTS.POST_COMMENTS,
     validateToken(),
     commentController.getPostsComment
   );
@@ -105,7 +99,7 @@ export const commentsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.get(
-    API_ENPOINTS.POST_COMMENT_BY_ID,
+    API_ENDPOINTS.POST_COMMENT_BY_ID,
     validateToken(),
     commentController.getPostsCommentById
   );
@@ -147,7 +141,7 @@ export const commentsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.post(
-    API_ENPOINTS.POST_COMMENTS,
+    API_ENDPOINTS.POST_COMMENTS,
     validateToken(),
     validateRequest(createCommentSchema, 'body'),
     commentController.postPostsComments
@@ -180,7 +174,7 @@ export const commentsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.delete(
-    API_ENPOINTS.POST_COMMENTS,
+    API_ENDPOINTS.POST_COMMENTS,
     validateToken(),
     commentController.deletePostsComments
   );
@@ -217,7 +211,7 @@ export const commentsRouter = (app: Application) => {
    *         $ref: '#/components/responses/InternalServerError'
    */
   app.delete(
-    API_ENPOINTS.POST_COMMENT_BY_ID,
+    API_ENDPOINTS.POST_COMMENT_BY_ID,
     validateToken(),
     commentController.deletePostsCommentById
   );
