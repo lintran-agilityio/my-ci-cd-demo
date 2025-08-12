@@ -98,7 +98,7 @@ class UsersController {
       
       const dataRes = await userServices.updateUserById(userIdNumber, username, email, isAdmin);
 
-      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
 
       // fetch updated user
       const updatedUser = await userServices.getUserById(userIdNumber);
@@ -135,7 +135,7 @@ class UsersController {
       const userIdNumber = Number(userId);
       const dataRes = await userServices.deleteUserById(userIdNumber);
 
-      if (dataRes === 0) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
       
       return res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {

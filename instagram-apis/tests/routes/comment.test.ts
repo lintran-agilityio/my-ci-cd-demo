@@ -1,8 +1,7 @@
 // libs
 import { SuperTest, Test } from "supertest";
-import { API_ENDPOINTS, STATUS_CODE, MESSAGES } from "@/constants";
+import { API_ENDPOINTS, STATUS_CODE } from "@/constants";
 import { COMMENTS_PAGINATION } from "@/mocks";
-import { generateToken } from "@/utils";
 import { RequestAuthenticationType } from "@/types";
 import { NextFunction } from "express";
 
@@ -62,14 +61,6 @@ describe('Comments routes for success', () => {
   afterAll(() => {
     jest.resetModules();
     jest.clearAllMocks();
-  });
-
-  it.skip(`GET ${pathComments} success`, async () => {
-    const res = await requestApp.get(pathComments).set('Authorization', 'Bearer faketoken');
-
-    expect(commentController.getAll).toHaveBeenCalled();
-    expect(res.status).toBe(STATUS_CODE.OK);
-    expect(res.body.data).toStrictEqual(COMMENTS_PAGINATION);
   });
 
   it(`DELETE ${pathPostComments} success`, async () => {

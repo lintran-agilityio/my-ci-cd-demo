@@ -76,7 +76,8 @@ class CommentsController {
     const postId = Number(id);
     try {
       const dataRes = await commentServices.deletePostsComments(postId);
-      if (dataRes === 0) {
+
+      if (!dataRes) {
         return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
       }
 
@@ -96,7 +97,8 @@ class CommentsController {
 
     try {
       const deletedCount = await commentServices.deletePostsCommentById(postId, commentNumberId);
-      if (deletedCount === 0) {
+
+      if (!deletedCount) {
         return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
       }
 
