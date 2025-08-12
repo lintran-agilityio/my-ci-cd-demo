@@ -34,6 +34,8 @@ class PostsController {
       const postId = Number(id);
       const dataRes = await postService.get(postId);
 
+      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
+
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
       const { message } = toError(error);
@@ -59,7 +61,7 @@ class PostsController {
 
       const user = await userServices.getUserById(authorId);
 
-      if (!user) return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, this.errorPostMessage.USER_NOT_FOUND));
+      if (!user) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.USER_NOT_FOUND));
 
       const dataRes = await postService.create({ ...body, authorId: user.userId });
 
@@ -83,11 +85,10 @@ class PostsController {
       // find users by userId
       const user = await userServices.getUserById(userIdNumber);
       if (!user) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
-      
+
       // find the post with userId
       const post = await postService.getPostByAuthorId(userIdNumber, idNumber);
       if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.NOT_FOUND_OWNED_USER));
- 
 
       const { message } = await postService.update(post, { ...payload, id: idNumber, authorId: userIdNumber });
 
@@ -104,8 +105,11 @@ class PostsController {
 
   deletePosts = async(_req: Request, res: Response, next: NextFunction) => {
     try {
-      await postService.deletePosts();
-      return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
+      const dataRes = await postService.deletePosts();
+      if (!dataRes) {
+        return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.NOT_FOUND));
+      }
+      return res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
@@ -124,14 +128,14 @@ class PostsController {
       const postId = Number(id);
       const post = await postService.getPostByAuthorId(userIdNumber, postId);
 
-      if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
+      if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
+      const isOwner = currentUserId === userIdNumber;
 
-      const { message } = await postService.deleteUsersPostById(postId, currentUserId, isAdminUser, userIdNumber);
-
-      if (message) {
-        return next(new HttpExceptionError(STATUS_CODE.FORBIDDEN, message));
+      if (!isOwner && !isAdminUser) {
+        return next(new HttpExceptionError(STATUS_CODE.FORBIDDEN, MESSAGES.ERRORS.NO_PERMISSION));
       }
 
+      await postService.deleteUsersPostById(postId, currentUserId, isAdminUser, userIdNumber);
       return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);

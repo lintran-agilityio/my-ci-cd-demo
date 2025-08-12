@@ -35,16 +35,18 @@ describe('Authentication controller', () => {
   });
   
   describe('Authentication: User register', () => {
+    beforeEach(async () => {
+      await User.destroy({ where: {} });
+      await User.create({
+        ...LIST_USERS[0],
+        password: 'hashed_password'
+      });
+    });
     app.post(API_ENDPOINTS.REGISTER, authenticationController.register);
 
     // Middleware handle error
     app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
       res.status(err.status || 500).json({ message: err.message });
-    });
-
-    User.create({
-      ...LIST_USERS[0],
-      password: 'hashed_password'
     });
 
     it('Should user register: create a user', async () => {
@@ -76,11 +78,16 @@ describe('Authentication controller', () => {
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.EXIST_USER);
     });
 
-    it('Should return error: server error', async () => {
+    it('Register should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
+
+      jest.mock('jwt-simple', () => ({
+        encode: jest.fn().mockReturnValue('fake_token')
+      }));
+
       jest.spyOn(User, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'create').mockRejectedValue(error);
 
@@ -98,27 +105,36 @@ describe('Authentication controller', () => {
     });
   });
 
-  describe('Authentication: User login', () => {
-    app.post(API_ENDPOINTS.LOGIN, authenticationController.login);
+  app.post(API_ENDPOINTS.LOGIN, authenticationController.login);
 
-    // Middleware handle error
-    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
-      res.status(err.status || 500).json({ message: err.message });
-    });
+  // Middleware handle error
+  app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+    res.status(err.status || 500).json({ message: err.message });
+  });
+
+  describe('Authentication: User login', () => {
+    const mockUserInstance = {
+      toJSON: () => ({
+        userId: 2,
+        email: 'usera@gmail.com',
+        username: 'lintran',
+        password: '$2b$10$abcdefghijk....',
+        isAdmin: false
+      })
+    } as any;
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+  });
 
     it('Should user login: user login', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue({
-        toJSON() {
-          return {
-            userId: 2,
-            email: 'usera@gmail.com',
-            username: 'lintran',
-            password: '$2b$10$abcdefghijk....',
-            isAdmin: false
-          };
-        }
-      } as any);
-      (jest.spyOn as any)(bcrypt, 'compare').mockResolvedValue(true);
+      jest.spyOn(User, 'findOne').mockResolvedValue(mockUserInstance);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      // (jest.spyOn as any)(bcrypt, 'compare').mockResolvedValue(true);
+
+      jest.mock('jwt-simple', () => ({
+        encode: jest.fn().mockReturnValue('fake_token')
+      }));
 
       const response = await request(app)
         .post(API_ENDPOINTS.LOGIN)
@@ -142,7 +158,7 @@ describe('Authentication controller', () => {
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD);
     });
 
-    it('Should return error: server error', async () => {
+    it('Login should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR

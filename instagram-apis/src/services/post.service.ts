@@ -88,16 +88,9 @@ class PostServices {
     userIdNumber: number
   ) => {
     try {
-      const isOwner = currentUserId === userIdNumber;
-
-      if (!isOwner && !isAdminUser) return { message: MESSAGES.ERRORS.NO_PERMISSION };
-      await Post.destroy({
+      return await Post.destroy({
         where: { id: postId }
       });
-
-      return {
-        message: ''
-      }
     } catch (error: unknown) {
       throw error;
     }

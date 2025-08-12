@@ -75,13 +75,12 @@ class CommentsController {
     const { id } = req.params;
     const postId = Number(id);
     try {
-      console.log("postId", postId);
       const dataRes = await commentServices.deletePostsComments(postId);
       if (dataRes === 0) {
         return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
       }
 
-      res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
+      return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
@@ -97,9 +96,8 @@ class CommentsController {
 
     try {
       const deletedCount = await commentServices.deletePostsCommentById(postId, commentNumberId);
-console.log("deletedCount", deletedCount);
       if (deletedCount === 0) {
-        return next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
+        return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST));
       }
 
       return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE, data: deletedCount });

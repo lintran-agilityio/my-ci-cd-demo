@@ -4,7 +4,6 @@ import { compare, genSalt, hash } from "bcrypt";
 import { User } from "@/models";
 import { omitField } from "@/utils";
 import { IUserInfo, IUserLogin, IUserResponse } from "@/types";
-import cs from "zod/v4/locales/cs.cjs";
 
 class AuthenticationService {
   isValidExistUser = async (email: string) => {

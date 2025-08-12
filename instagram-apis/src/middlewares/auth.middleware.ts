@@ -17,7 +17,6 @@ const validateToken = (isValidAdmin?: boolean) => {
 
     try {
       const decode = generateToken.decodeToken(token);
-
       const { exp, isAdmin, userId } = decode;
 
       // checking expiration time
@@ -31,12 +30,13 @@ const validateToken = (isValidAdmin?: boolean) => {
 
       req.userId = userId;
       req.isAdmin = isAdmin;
+
       next();
     } catch (error) {
-
+      // console.log("Error decoding token:", error);
       next(new HttpExceptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_TOKEN));
     }
   }
 };
 
-export default validateToken;
+export { validateToken };
