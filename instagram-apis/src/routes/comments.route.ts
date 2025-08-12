@@ -4,8 +4,7 @@ import { Application } from 'express';
 import { API_ENDPOINTS } from '@/constants';
 import { commentController } from '@/controllers';
 import { createCommentSchema } from '@/validation';
-import { validateToken } from '@/middlewares/auth.middleware';
-import { validateRequest } from '@/middlewares/validate-request.middleware';
+import { validateToken, validateRequest } from '@/middlewares';
 
 export const commentsRouter = (app: Application) => {
   /**

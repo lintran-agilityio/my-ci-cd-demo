@@ -1,18 +1,28 @@
 // libs
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from 'express';
 
-import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from "@/constants";
-import { postService, userServices } from "@/services";
-import { logger, toError } from "@/utils";
-import HttpExceptionError from "@/exceptions";
-import { RequestAuthenticationType } from "@/types";
+import {
+  MESSAGES,
+  MESSAGES_AUTHENTICATION,
+  PAGINATION,
+  STATUS_CODE,
+} from '@/constants';
+import { postService, userServices } from '@/services';
+import { logger, toError } from '@/utils';
+import HttpExceptionError from '@/exceptions';
+import { RequestAuthenticationType } from '@/types';
 
 class PostsController {
   private errorPostMessage = MESSAGES.ERRORS.POST;
 
-  getAll = async(req: Request, res: Response, next: NextFunction) => {
-    const { DEFAULT: { OFFSET, LIMIT } } = PAGINATION;
-    const { offset =  OFFSET, limit = LIMIT } = req.query;
+  /**
+   * Get all posts with pagination
+   * @param req - Express request object with query parameters for pagination
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  getAll = async (req: Request, res: Response, next: NextFunction) => {
+    const { offset = PAGINATION.OFFSET, limit = PAGINATION.LIMIT } = req.query;
     const limitNumber = Number(limit);
     const offsetNumber = Number(offset);
 
@@ -27,14 +37,26 @@ class PostsController {
     }
   };
 
-  getPostById = async(req: Request, res: Response, next: NextFunction) => {
+  /**
+   * Get post by ID
+   * @param req - Express request object with post id parameter
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  getPostById = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     try {
       const postId = Number(id);
       const dataRes = await postService.get(postId);
 
-      if (!dataRes) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
+      if (!dataRes)
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            MESSAGES.ERRORS.POST.NOT_FOUND
+          )
+        );
 
       return res.status(STATUS_CODE.OK).json({ data: dataRes });
     } catch (error) {
@@ -46,7 +68,17 @@ class PostsController {
     }
   };
 
-  createPostByUser = async(req: Request, res: Response, next: NextFunction) => {
+  /**
+   * Create a new post by user with slug validation
+   * @param req - Express request object containing post data
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  createPostByUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     const { body } = req;
 
     try {
@@ -56,14 +88,28 @@ class PostsController {
       const slugExiting = await postService.existSlug(slug);
 
       if (slugExiting && Object.keys(slugExiting).length) {
-        next(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, this.errorPostMessage.INVALID_SLUG));
+        next(
+          new HttpExceptionError(
+            STATUS_CODE.BAD_REQUEST,
+            this.errorPostMessage.INVALID_SLUG
+          )
+        );
       }
 
       const user = await userServices.getUserById(authorId);
 
-      if (!user) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.USER_NOT_FOUND));
+      if (!user)
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            this.errorPostMessage.USER_NOT_FOUND
+          )
+        );
 
-      const dataRes = await postService.create({ ...body, authorId: user.userId });
+      const dataRes = await postService.create({
+        ...body,
+        authorId: user.userId,
+      });
 
       return res.status(STATUS_CODE.CREATED).json({ data: dataRes });
     } catch (error) {
@@ -74,7 +120,17 @@ class PostsController {
     }
   };
 
-  putUsersPostById = async(req: Request, res: Response, next: NextFunction) => {
+  /**
+   * Update user's post by ID with ownership validation
+   * @param req - Express request object with userId and post id parameters
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  putUsersPostById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     const { userId, id } = req.params;
     const payload = req.body;
 
@@ -84,17 +140,36 @@ class PostsController {
 
       // find users by userId
       const user = await userServices.getUserById(userIdNumber);
-      if (!user) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+      if (!user)
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            MESSAGES_AUTHENTICATION.USER_NOT_FOUND
+          )
+        );
 
       // find the post with userId
       const post = await postService.getPostByAuthorId(userIdNumber, idNumber);
-      if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.NOT_FOUND_OWNED_USER));
+      if (!post)
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            this.errorPostMessage.NOT_FOUND_OWNED_USER
+          )
+        );
 
-      const { message } = await postService.update(post, { ...payload, id: idNumber, authorId: userIdNumber });
+      const { message } = await postService.update(post, {
+        ...payload,
+        id: idNumber,
+        authorId: userIdNumber,
+      });
 
-      if (message) return next(new HttpExceptionError(STATUS_CODE.CONFLICT, message));
+      if (message)
+        return next(new HttpExceptionError(STATUS_CODE.CONFLICT, message));
 
-      return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.UPDATE });
+      return res
+        .status(STATUS_CODE.NO_CONTENT)
+        .json({ message: MESSAGES.SUCCESS.UPDATE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
@@ -103,13 +178,26 @@ class PostsController {
     }
   };
 
-  deletePosts = async(_req: Request, res: Response, next: NextFunction) => {
+  /**
+   * Delete all posts
+   * @param _req - Express request object (unused)
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  deletePosts = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const dataRes = await postService.deletePosts();
       if (!dataRes) {
-        return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, this.errorPostMessage.NOT_FOUND));
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            this.errorPostMessage.NOT_FOUND
+          )
+        );
       }
-      return res.status(STATUS_CODE.OK).json({ message: MESSAGES.SUCCESS.DELETE });
+      return res
+        .status(STATUS_CODE.OK)
+        .json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
@@ -118,7 +206,17 @@ class PostsController {
     }
   };
 
-  deleteUsersPostById = async(req: RequestAuthenticationType, res: Response, next: NextFunction) => {
+  /**
+   * Delete user's post by ID with permission validation
+   * @param req - Express request object with userId and post id parameters
+   * @param res - Express response object
+   * @param next - Express next function for error handling
+   */
+  deleteUsersPostById = async (
+    req: RequestAuthenticationType,
+    res: Response,
+    next: NextFunction
+  ) => {
     const { userId, id } = req.params;
     const isAdminUser = req.isAdmin || false;
     const currentUserId = req.userId || 0;
@@ -128,15 +226,33 @@ class PostsController {
       const postId = Number(id);
       const post = await postService.getPostByAuthorId(userIdNumber, postId);
 
-      if (!post) return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND));
+      if (!post)
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.NOT_FOUND,
+            MESSAGES.ERRORS.POST.NOT_FOUND
+          )
+        );
       const isOwner = currentUserId === userIdNumber;
 
       if (!isOwner && !isAdminUser) {
-        return next(new HttpExceptionError(STATUS_CODE.FORBIDDEN, MESSAGES.ERRORS.NO_PERMISSION));
+        return next(
+          new HttpExceptionError(
+            STATUS_CODE.FORBIDDEN,
+            MESSAGES.ERRORS.NO_PERMISSION
+          )
+        );
       }
 
-      await postService.deleteUsersPostById(postId, currentUserId, isAdminUser, userIdNumber);
-      return res.status(STATUS_CODE.NO_CONTENT).json({ message: MESSAGES.SUCCESS.DELETE });
+      await postService.deleteUsersPostById(
+        postId,
+        currentUserId,
+        isAdminUser,
+        userIdNumber
+      );
+      return res
+        .status(STATUS_CODE.NO_CONTENT)
+        .json({ message: MESSAGES.SUCCESS.DELETE });
     } catch (error) {
       const { message } = toError(error);
       logger.error(message);
@@ -144,6 +260,6 @@ class PostsController {
       next(new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, message));
     }
   };
-};
+}
 
 export const postController = new PostsController();

@@ -6,6 +6,11 @@ import { generateToken } from "@/utils";
 import { RequestAuthenticationType } from "@/types";
 import HttpExceptionError from "@/exceptions";
 
+/**
+ * Middleware to validate JWT token and check user authentication
+ * @param isValidAdmin - Optional flag to require admin privileges
+ * @returns Express middleware function that validates token and sets user context
+ */
 const validateToken = (isValidAdmin?: boolean) => {
   return (req: RequestAuthenticationType, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;

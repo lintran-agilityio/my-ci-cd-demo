@@ -10,3 +10,4 @@ yarn-debug.log
 .idea/
 .vscode/
 *.log
+logs/

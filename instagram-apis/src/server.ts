@@ -1,5 +1,6 @@
 // libs
 import { Request, Response } from 'express';
+import express, { Express } from 'express';
 
 // utils
 import { logger } from '@/utils';
@@ -7,12 +8,14 @@ import { sequelize } from '@/configs';
 import { PORT } from '@/constants';
 import routes from '@/routes';
 import { apiDocsRouter } from '@/routes/api-doc.route';
-import app from './app';
-import { globalErrorMiddleware, handleNotFoundRoute } from "@/middlewares/handle-error.middleware";
+import { globalErrorMiddleware, handleNotFoundRoute } from '@/middlewares';
 
+const app: Express = express();
+
+app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, World! - Start doing working with Node.js and TypeScript');
+  res.send('Hello, World! - Start doing working with Node.js and TypeScript');
 });
 
 // Api docs
@@ -29,12 +32,12 @@ app.use(handleNotFoundRoute);
 app.use(globalErrorMiddleware);
 
 export const startServer = () => {
-    sequelize.sync().then(() => {
-        app.listen(PORT, () => {
-            logger.info(`Server is running on http://localhost:${PORT}`);
-        });
-    })
-}
+  sequelize.sync().then(() => {
+    app.listen(PORT, () => {
+      logger.info(`Server is running on http://localhost:${PORT}`);
+    });
+  });
+};
 
 startServer();
 

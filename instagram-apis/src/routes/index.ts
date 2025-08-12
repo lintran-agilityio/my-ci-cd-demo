@@ -1,7 +1,7 @@
 // libs
 import { Application } from 'express';
 
-import { authenticationRouter } from './authetication.route';
+import { authenticationRouter } from './authentication.route';
 import { userRouter } from './users.route';
 import { postsRouter } from './posts.route';
 import { commentsRouter } from './comments.route';
