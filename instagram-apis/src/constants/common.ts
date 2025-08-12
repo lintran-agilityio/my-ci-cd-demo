@@ -7,7 +7,8 @@ export const FIELDS_NAME = {
 export const REGEX = {
   NAME: /^[a-zA-Z'-]{2,50}$/,
   EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/,
+  PASSWORD:
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/,
 };
 
 export const STATUS_CODE = {
@@ -19,7 +20,7 @@ export const STATUS_CODE = {
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
   NO_CONTENT: 204,
-  CONFLICT: 409
+  CONFLICT: 409,
 };
 
 export const API_PREFIX = '/api/v1';
@@ -46,6 +47,8 @@ export const ROUTES = {
 export const PAGINATION = {
   DEFAULT: {
     LIMIT: 10,
-    OFFSET: 0
-  }  
+    OFFSET: 0,
+  },
+  LIMIT: 10,
+  OFFSET: 0,
 };

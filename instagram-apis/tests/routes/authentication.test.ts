@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 
 import { sequelize } from "@/configs";
 import { authenticationController } from "@/controllers";
-import { authenticationRouter } from "@/routes/authetication.route";
+import { authenticationRouter } from "@/routes/authentication.route";
 import { API_ENDPOINTS, STATUS_CODE, MESSAGES_AUTHENTICATION } from "@/constants";
 
 const { SUCCESSFUL } = MESSAGES_AUTHENTICATION;

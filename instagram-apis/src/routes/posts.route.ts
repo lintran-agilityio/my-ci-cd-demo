@@ -3,8 +3,7 @@ import { Application, NextFunction } from 'express';
 
 import { API_ENDPOINTS } from '@/constants';
 import { postController } from '@/controllers';
-import { validateToken } from '@/middlewares/auth.middleware';
-import { validateRequest } from '@/middlewares/validate-request.middleware';
+import { validateToken, validateRequest } from '@/middlewares';
 import { createPostSchema, updatePostSchema } from '@/validation';
 import { RequestAuthenticationType } from '@/types';
 
@@ -85,11 +84,7 @@ export const postsRouter = (app: Application) => {
    *       500:
    *         $ref: '#/components/responses/InternalServerError'
    */
-  app.get(
-    API_ENDPOINTS.POSTS,
-    validateToken(),
-    postController.getAll
-  );
+  app.get(API_ENDPOINTS.POSTS, validateToken(), postController.getAll);
 
   /**
    * @openapi
@@ -376,25 +371,25 @@ export const postsRouter = (app: Application) => {
   );
 
   /**
- * @openapi
- * /api/v1/posts:
- *   delete:
- *     summary: Delete all posts by admin user
- *     description: Deletes all posts. Requires admin authentication.
- *     tags:
- *       - Posts Controller
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Posts deleted successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Admin access required
- *       500:
- *         $ref: '#/components/responses/InternalServerError'
- */
+   * @openapi
+   * /api/v1/posts:
+   *   delete:
+   *     summary: Delete all posts by admin user
+   *     description: Deletes all posts. Requires admin authentication.
+   *     tags:
+   *       - Posts Controller
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Posts deleted successfully
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - Admin access required
+   *       500:
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   app.delete(
     API_ENDPOINTS.POSTS,
     validateToken(true),
@@ -435,6 +430,7 @@ export const postsRouter = (app: Application) => {
   app.delete(
     API_ENDPOINTS.USERS_POST_ID,
     validateToken(),
-    (req: RequestAuthenticationType, res, next: NextFunction) => postController.deleteUsersPostById(req, res, next)
-  )
+    (req: RequestAuthenticationType, res, next: NextFunction) =>
+      postController.deleteUsersPostById(req, res, next)
+  );
 };
