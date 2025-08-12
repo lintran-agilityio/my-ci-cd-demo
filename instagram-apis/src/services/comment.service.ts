@@ -8,19 +8,6 @@ type ParamCreateCommentType = {
 };
 
 class CommentsServices {
-  getAll = async (offset: number, limit: number) => {
-    try {
-      return findAllData({
-        model: Comment,
-        offset,
-        limit,
-        order: ['createdAt', 'DESC']
-      });
-    } catch (error) {
-      throw error;
-    }
-  };
-
   getPostsComment = async (offset: number, limit: number, postId: number) => {
     try {
       const { rows, count } = await Comment.findAndCountAll({

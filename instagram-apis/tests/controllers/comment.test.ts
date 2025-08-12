@@ -3,23 +3,16 @@ import 'jest';
 import express, { NextFunction, Request, Response, Express } from 'express';
 import bodyParser from 'body-parser';
 import request from 'supertest';
+import jwt from 'jwt-simple';
 
-jest.mock('jwt-simple', () => ({
-  __esModule: true,
-  ...jest.requireActual('jwt-simple'),
-  decode: jest.fn(),
-  encode: jest.fn()
-}));
+import { RequestAuthenticationType } from '@/types';
 
 jest.mock('@/middlewares/auth.middleware', () => ({
-  __esModule: true,
-  default: jest.fn(() => {
-    return (req: any, res: any, next: any) => {
-      req.userId = 1;
-      req.isAdmin = true;
-      next();
-    };
-  }),
+  validateToken: () => (req: RequestAuthenticationType, res: Response, next: NextFunction) => {
+    req.userId = 1;
+    req.isAdmin = true;
+    next();
+  },
 }));
 
 import { sequelize } from "@/configs";
@@ -28,8 +21,8 @@ import { API_ENDPOINTS, MESSAGES, MESSAGES_AUTHENTICATION, STATUS_CODE } from '@
 import { commentController } from '@/controllers';
 import { Comment, Post } from '@/models';
 import { MOCKS_POSTS } from '@/mocks';
-import validateToken from '@/middlewares/auth.middleware';
-import { generateToken } from '@/utils';
+import { validateToken } from '@/middlewares/auth.middleware';
+import * as utils from '@/utils';
 
 const app: Express = express();
 app.use(bodyParser.json());
@@ -40,9 +33,11 @@ describe('Comments controller', () => {
   });
 
   afterEach(async () => {
+    await sequelize.query('PRAGMA foreign_keys = OFF;');
+    await sequelize.truncate({ cascade: true });
+    await sequelize.query('PRAGMA foreign_keys = ON;');
+  
     jest.clearAllMocks();
-    await Comment.destroy({ where: {} });
-    await Post.destroy({ where: {} });
   });
 
   afterAll(async () => {
@@ -50,13 +45,17 @@ describe('Comments controller', () => {
   });
   
   describe('Comments: Get comments of post', () => {
+    beforeEach(async() => {
+      await Comment.destroy({ where: {} });
+    });
+
     app.get(API_ENDPOINTS.POST_COMMENTS, commentController.getPostsComment);
 
     // Middleware handle error
     app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
       res.status(err.status || 500).json({ message: err.message });
     });
-
+    
     it('Should get post comments: return comments', async () => {
       jest.spyOn(Comment, "findAndCountAll").mockResolvedValue({
         count: 2,
@@ -94,6 +93,10 @@ describe('Comments controller', () => {
   });
 
   describe('Comments: Get comment by ID', () => {
+    beforeEach(async() => {
+      await Comment.destroy({ where: {} });
+    });
+
     app.get(API_ENDPOINTS.POST_COMMENT_BY_ID, commentController.getPostsCommentById);
 
     // Middleware handle error
@@ -136,6 +139,10 @@ describe('Comments controller', () => {
   });
 
   describe('Comments: Create comment for post', () => {
+    beforeEach(async() => {
+      await Comment.destroy({ where: {} });
+    });
+
     app.post(API_ENDPOINTS.POST_COMMENTS, commentController.postPostsComments);
 
     // Middleware handle error
@@ -183,9 +190,19 @@ describe('Comments controller', () => {
   });
 
   describe('Comments: Delete comment for post', () => {
-    
-    beforeEach(() => {
-      jest.spyOn(generateToken, 'decodeToken').mockReturnValue({
+    let originalToError: typeof utils.toError;
+    beforeEach(async() => {
+      // Save the original implementation of `toError`
+      originalToError = utils.toError;
+      await Comment.destroy({ where: {} });
+      
+      jest.restoreAllMocks();
+      jest.spyOn(utils.generateToken, 'decodeToken').mockReturnValue({
+        exp: Math.floor(Date.now() / 1000) + 60,
+        isAdmin: true,
+        userId: 1
+      });
+      jest.spyOn(jwt, 'decode').mockReturnValue({
         exp: Math.floor(Date.now() / 1000) + 60,
         isAdmin: true,
         userId: 1
@@ -197,6 +214,10 @@ describe('Comments controller', () => {
         res.status(err.status || 500).json({ message: err.message });
       });
     });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });  
 
     afterAll(async () => {
       jest.restoreAllMocks();
@@ -222,6 +243,39 @@ describe('Comments controller', () => {
       const response = await request(app)
         .delete(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
         .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(errorMessage);
+    });
+  });
+
+  describe('Comments: delete comment by ID', () => {
+    beforeEach(async() => {
+      await Comment.destroy({ where: {} });
+    });
+
+    app.delete(API_ENDPOINTS.POST_COMMENT_BY_ID, commentController.deletePostsCommentById);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    it('Should delete post comment by ID: return success message', async () => {
+      jest.spyOn(Comment, "destroy").mockResolvedValue(1);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENT_BY_ID.replace(':id', '1').replace(':commentId', '1'));
+
+      expect(response.status).toBe(STATUS_CODE.NO_CONTENT);
+    });
+
+    it('Should return error: comment not found', async () => {
+      const errorMessage = MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST;
+      jest.spyOn(Comment, "destroy").mockResolvedValue(0);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENT_BY_ID.replace(':id', '1').replace(':commentId', '1'));
 
       expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
       expect(response.body.message).toBe(errorMessage);

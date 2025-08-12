@@ -1,278 +1,464 @@
 // libs
 import 'jest';
-import { NextFunction, Request, Response } from 'express';
+import express, { NextFunction, Request, Response, Express } from 'express';
+import bodyParser from 'body-parser';
+import request from 'supertest';
+import jwt from 'jwt-simple';
 
-import { postController } from "@/controllers";
-import { postService, userServices } from '@/services';
-import { MESSAGES, MESSAGES_AUTHENTICATION, PAGINATION, STATUS_CODE } from '@/constants';
+import { RequestAuthenticationType } from '@/types';
+import { sequelize } from "@/configs";
+import { Post, User } from '@/models';
 import { MOCKS_POSTS } from '@/mocks';
+import { API_ENDPOINTS, MESSAGES, MESSAGES_AUTHENTICATION, MESSAGES_VALIDATION, PAGINATION, STATUS_CODE } from '@/constants';
+import { postController } from '@/controllers';
 import HttpExceptionError from '@/exceptions';
-
-jest.mock('@/services');
-jest.mock('jwt-simple', () => ({
-  __esModule: true,
-  ...jest.requireActual('jwt-simple'),
-  decode: jest.fn(),
-  encode: jest.fn()
-}));
+import * as authMiddleware from '@/middlewares/auth.middleware';
+import { count } from 'console';
+import de from 'zod/v4/locales/de.cjs';
+import { postService, userServices } from '@/services';
 
 jest.mock('@/middlewares/auth.middleware', () => ({
-  __esModule: true,
-  default: jest.fn(() => {
-    return (req: any, res: any, next: any) => {
-      req.userId = 1;
-      req.isAdmin = true;
-      next();
-    };
-  }),
+  validateToken: () => (req: RequestAuthenticationType, res: Response, next: NextFunction) => {
+    req.userId = 1;
+    req.isAdmin = true;
+    next();
+  },
 }));
 
-describe('Post controller', () => {
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: Partial<NextFunction>;
-  const { OFFSET, LIMIT } = PAGINATION.DEFAULT;
-  const { UPDATE } = MESSAGES.SUCCESS;
+const app: Express = express();
+app.use(bodyParser.json());
 
-  beforeEach(() => {
-    req = {
-      query: {
-        offset: OFFSET.toString(),
-        limit: LIMIT.toString(),
-      },
-      params: {
-        userId: '1',
-        id: '1'
-      },
-      body: {
-        post: MOCKS_POSTS[0]
+describe('Posts Controller', () => {
+  const { OFFSET, LIMIT } = PAGINATION.DEFAULT;
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
+  });
+
+  afterEach(async () => {
+    await sequelize.query('PRAGMA foreign_keys = OFF;');
+    await sequelize.truncate({ cascade: true });
+    await sequelize.query('PRAGMA foreign_keys = ON;');
+  
+    jest.restoreAllMocks();
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
+  });
+
+  describe('Get posts', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
+    });
+
+    app.get(API_ENDPOINTS.POSTS, authMiddleware.validateToken(), postController.getAll);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    const paginationData = {
+      rows: MOCKS_POSTS,
+      count: MOCKS_POSTS.length
+    };
+    const resDataPagination = {
+      data: MOCKS_POSTS,
+      meta: {
+        pagination: {
+          offset: OFFSET,
+          limit: LIMIT,
+          total: MOCKS_POSTS.length,
+        }
       }
     };
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    };
+    it('Should get posts with pagination', async () => {
+      jest.spyOn(Post, 'findAndCountAll').mockResolvedValue(paginationData as any);  
+      const response = await request(app)
+        .get(API_ENDPOINTS.POSTS)
+        .query({ offset: OFFSET, limit: LIMIT });
 
-    next = jest.fn();
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-    (postService.getAll as jest.Mock).mockReset();
-    (postService.get as jest.Mock).mockReset();
-    (postService.create as jest.Mock).mockReset();
-    (postService.update as jest.Mock).mockReset();
-    (postService.existSlug as jest.Mock).mockReset();
-    (postService.getPostByAuthorId as jest.Mock).mockReset();
-    (postService.deletePosts as jest.Mock).mockReset();
-    (postService.deleteUsersPostById as jest.Mock).mockReset();
-    (userServices.getUserById as jest.Mock).mockReset();
-  });
-
-  describe('Get all Posts', () => {
-    it('should return all posts', async () => {
-      (postService.getAll as jest.Mock).mockResolvedValueOnce(MOCKS_POSTS);
-
-      await postController.getAll(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.getAll).toHaveBeenCalledWith(OFFSET, LIMIT);
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({ data: MOCKS_POSTS });
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data).toEqual(resDataPagination);
     });
 
-    it('should handle error when getting all posts', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (postService.getAll as jest.Mock).mockRejectedValueOnce(error);
+    it('should get error when get posts', async () => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      jest.spyOn(Post, 'findAndCountAll').mockRejectedValue(error);
+      const response = await request(app)
+        .get(API_ENDPOINTS.POSTS)
+        .query({ offset: OFFSET, limit: LIMIT });
 
-      await postController.getAll(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.getAll).toHaveBeenCalledWith(OFFSET, LIMIT);
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe('Database error');
     });
   });
 
-  describe('Get Post by ID', () => {
-    it('should return post by ID', async () => {
-      (postService.get as jest.Mock).mockResolvedValueOnce(MOCKS_POSTS[0]);
-
-      await postController.getPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.get).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.OK);
-      expect(res.json).toHaveBeenCalledWith({ data: MOCKS_POSTS[0] });
+  describe('Get post by ID', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
     });
 
-    it('should handle error when getting post by ID', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (postService.get as jest.Mock).mockRejectedValueOnce(error);
+    app.get(`${API_ENDPOINTS.POST_BY_ID}`, authMiddleware.validateToken(), postController.getPostById);
 
-      await postController.getPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.get).toHaveBeenCalledWith(1);
-      expect(next).toHaveBeenCalledWith(error);
-    });
-  });
-
-  describe('Create Post by User', () => {
-    it('should create a post', async () => {
-      (postService.existSlug as jest.Mock).mockResolvedValueOnce(false);
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.create as jest.Mock).mockResolvedValueOnce({ ...MOCKS_POSTS[0], authorId: 1 });
-
-      await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
-
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.CREATED);
-      expect(res.json).toHaveBeenCalledWith({ data: { ...MOCKS_POSTS[0], authorId: 1 } });
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('should handle error when creating a post with existing slug', async () => {
-      (postService.existSlug as jest.Mock).mockResolvedValueOnce({ slug: 'animals-post' });
+    it('Should get post by ID', async () => {
+      const post = MOCKS_POSTS[0];
+      jest.spyOn(Post, 'findByPk').mockResolvedValue(post as any);
+      const response = await request(app)
+        .get(`${API_ENDPOINTS.POSTS}/${post.id}`);
 
-      await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.existSlug).toHaveBeenCalledWith(req.body.slug);
-      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.INVALID_SLUG));
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.data).toEqual(post);
     });
 
-    it('should handle error when creating a post with non-existing user', async () => {
-      (postService.existSlug as jest.Mock).mockResolvedValueOnce(false);
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce(null);
+    it('Should return error when post not found', async () => {
+      jest.spyOn(Post, 'findByPk').mockResolvedValue(null);
+      const response = await request(app)
+        .get(`${API_ENDPOINTS.POSTS}/999`);
 
-      await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
-
-      expect(userServices.getUserById).toHaveBeenCalledWith(req.body.authorId);
-      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.BAD_REQUEST, MESSAGES.ERRORS.POST.USER_NOT_FOUND));
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe('Post not found');
     });
 
-    it('should handle error when creating a post', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (postService.existSlug as jest.Mock).mockResolvedValueOnce(false);
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
+    it('Should return error when get post by ID', async () => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      jest.spyOn(Post, 'findByPk').mockRejectedValue(error);
+      const response = await request(app)
+        .get(`${API_ENDPOINTS.POSTS}/1`);
 
-      (postService.create as jest.Mock).mockRejectedValueOnce(error);
-
-      await postController.createPostByUser(req as Request, res as Response, next as NextFunction);
-
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe('Database error');
     });
   });
 
-  describe('Update Post by User', () => {
-    it('should update a post by user ID and post ID', async () => {
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockResolvedValueOnce({ ...MOCKS_POSTS[0], authorId: 1 });
-      (postService.update as jest.Mock).mockResolvedValueOnce({ ...MOCKS_POSTS[0], authorId: 1 });
-
-      await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(userServices.getUserById).toHaveBeenCalledWith(1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NO_CONTENT);
+  describe('Create post by user', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
     });
 
-    it('should handle error when updating a post with non-existing user', async () => {
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce(null);
+    app.post(API_ENDPOINTS.POSTS, authMiddleware.validateToken(), postController.createPostByUser);
 
-      await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(userServices.getUserById).toHaveBeenCalledWith(1);
-      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES_AUTHENTICATION.USER_NOT_FOUND));
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
     });
 
-    it('should handle error when updating a post with non-existing post', async () => {
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockResolvedValueOnce(null);
+    it('Should create post by user', async () => {
+      const newPost = { ...MOCKS_POSTS[0], authorId: 1 };
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null);
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(Post, 'create').mockResolvedValue(newPost as any);
+      const response = await request(app)
+        .post(API_ENDPOINTS.POSTS)
+        .send(newPost);
 
-      await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.getPostByAuthorId).toHaveBeenCalledWith(1, 1);
-      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.ERRORS.POST.NOT_FOUND_OWNED_USER));
+      expect(response.status).toBe(STATUS_CODE.CREATED);
+      expect(response.body.data).toEqual(newPost);
     });
 
-    it('should handle error something conflict when updating a post', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.CONFLICT,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockResolvedValueOnce({ ...MOCKS_POSTS[0], authorId: 1 });
-      (postService.update as jest.Mock).mockRejectedValueOnce(error);
-    }); 
+    it('Should return error INVALID_SLUG when slug is existed', async () => {
+      jest.spyOn(Post, 'findOne').mockResolvedValue(MOCKS_POSTS[0] as any);
+      const response = await request(app)
+        .post(API_ENDPOINTS.POSTS)
+        .send({ ...MOCKS_POSTS[0], slug: 'existing-slug' });
 
-    it('should handle error when updating a post', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockRejectedValueOnce(error);
+      expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
+      expect(response.body.message).toBe(MESSAGES.ERRORS.POST.INVALID_SLUG);
+    });
 
-      await postController.putUsersPostById(req as Request, res as Response, next as NextFunction);
+    it('Should return error when user not found', async () => {
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null);
+      jest.spyOn(User, 'findByPk').mockResolvedValue(null);
+      const response = await request(app)
+        .post(API_ENDPOINTS.POSTS)
+        .send({ ...MOCKS_POSTS[0], authorId: 999 });
 
-      expect(next).toHaveBeenCalledWith(error);
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES.ERRORS.POST.USER_NOT_FOUND);
+    });
+
+    it('Should return error when create post fails', async () => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null);
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(Post, 'create').mockRejectedValue(error);
+      const response = await request(app)
+        .post(API_ENDPOINTS.POSTS)
+        .send(MOCKS_POSTS[0]);
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe('Database error');
     });
   });
 
-  describe('Delete Posts', () => {
-    it('should delete all posts', async () => {
-      await postController.deletePosts(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.deletePosts).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NO_CONTENT);
+  describe('Update post by user', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
+    });
+    
+    afterEach(async () => {
+      jest.restoreAllMocks();
     });
 
-    it('should handle error when deleting posts', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      (postService.deletePosts as jest.Mock).mockRejectedValueOnce(error);
+    app.put(`${API_ENDPOINTS.POST_BY_ID}`, authMiddleware.validateToken(), postController.putUsersPostById);
 
-      await postController.deletePosts(req as Request, res as Response, next as NextFunction);
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
 
-      expect(next).toHaveBeenCalledWith(error);
+    it('Should update post by user', async () => {
+      const updatedPost = { ...MOCKS_POSTS[0], title: 'Updated Title' };
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(postService, 'getPostByAuthorId').mockResolvedValue({
+        ...MOCKS_POSTS[0],
+        update: jest.fn().mockResolvedValue(true),
+      } as any);
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null as any);
+      
+      jest.spyOn(Post.prototype, 'update').mockResolvedValue(true as any);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/${updatedPost.id}`)
+        .send(updatedPost);
+
+      expect(response.status).toBe(STATUS_CODE.NO_CONTENT);
+    });
+
+    it('Should return error User not found when updating post', async () => {
+      jest.spyOn(User, 'findByPk').mockResolvedValue(null);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/1`)
+        .send(MOCKS_POSTS[0]);
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
+    });
+
+    it('Should return error when post not found', async () => {
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/999`)
+        .send(MOCKS_POSTS[0]);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES.ERRORS.POST.NOT_FOUND_OWNED_USER);
+    });
+
+    it('Should return error Slug already exists when call update post by user', async () => {
+      const updatedPost = { ...MOCKS_POSTS[0], title: 'Updated Title' };
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(postService, 'getPostByAuthorId').mockResolvedValue({
+        ...MOCKS_POSTS[0],
+        update: jest.fn().mockResolvedValue(true),
+      } as any);
+      jest.spyOn(Post, 'findOne').mockResolvedValue({ ...MOCKS_POSTS[0]} as any);
+      
+      jest.spyOn(Post.prototype, 'update').mockResolvedValue(true as any);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/${updatedPost.id}`)
+        .send(updatedPost);
+
+      expect(response.body.message).toBe(MESSAGES_VALIDATION.INVALID_SLUG_POST);
+    });
+
+    it('Should return error when update post fails', async () => {
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      jest.spyOn(Post, 'findByPk').mockResolvedValue(MOCKS_POSTS[0] as any);
+      jest.spyOn(Post, 'update').mockRejectedValue(error);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/${MOCKS_POSTS[0].id}`)
+        .send(MOCKS_POSTS[0]);
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
     });
   });
 
-  describe('Delete User\'s Post by ID', () => {
-    it('should delete a user\'s post by user ID and post ID', async () => {
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockResolvedValueOnce({ ...MOCKS_POSTS[0], authorId: 1 });
-      (postService.deleteUsersPostById as jest.Mock).mockResolvedValueOnce({ message: null });
-
-      await postController.deleteUsersPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.getPostByAuthorId).toHaveBeenCalledWith(1, 1);
-      expect(res.status).toHaveBeenCalledWith(STATUS_CODE.NO_CONTENT);
+  describe('Delete posts', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
     });
 
-    it('should handle error when deleting a user\'s post with non-existing post', async () => {
-      (postService.getPostByAuthorId as jest.Mock).mockResolvedValueOnce(null);
-
-      await postController.deleteUsersPostById(req as Request, res as Response, next as NextFunction);
-
-      expect(postService.getPostByAuthorId).toHaveBeenCalledWith(1, 1);
-      expect(next).toHaveBeenCalledWith(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
+    afterEach(() => {
+      jest.restoreAllMocks();
     });
 
-    it('should handle error when deleting a user\'s post', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
+    app.delete(API_ENDPOINTS.POSTS, authMiddleware.validateToken(), postController.deletePosts);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    it('Should delete all posts', async () => {
+      jest.spyOn(Post, 'destroy').mockResolvedValue(1);
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POSTS);
+
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.message).toBe(MESSAGES.SUCCESS.DELETE);
+    });
+
+    it('Should return error when no posts to delete', async () => {
+      jest.spyOn(Post, 'destroy').mockResolvedValue(0);
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POSTS);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES.ERRORS.POST.NOT_FOUND);
+    });
+
+    it('Should return error when delete posts fails', async () => {
+      jest.spyOn(Post, 'destroy').mockRejectedValue(new Error('Database error'));
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POSTS);
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe('Database error');
+    });
+  });
+
+  describe('Delete user\'s post by ID', () => {
+    beforeEach(async() => {
+      await Post.destroy({ where: {} });
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    app.delete(`${API_ENDPOINTS.USERS_POST_ID}`, authMiddleware.validateToken(), postController.deleteUsersPostById);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    it('Should delete user\'s post by ID', async () => {
+      const post = MOCKS_POSTS[0];
+      jest.spyOn(Post, 'findOne').mockResolvedValue({ ...post} as any);
+      jest.spyOn(Post, 'destroy').mockResolvedValue(1);
+
+      const response = await request(app)
+        .delete(`${API_ENDPOINTS.USERS_POST_ID}`.replace(':userId', '1').replace(':id', post.id.toString()))
+        .set('Authorization', `Bearer ${jwt.encode({ userId: 1 }, 'secret')}`);
+
+      expect(response.status).toBe(STATUS_CODE.NO_CONTENT);
+    });
+
+    it('Should return error when post not found', async () => {
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null);
+      const response = await request(app)
+        .delete(`${API_ENDPOINTS.USERS_POST_ID}`.replace(':userId', '1').replace(':id', '999'))
+        .set('Authorization', `Bearer ${jwt.encode({ userId: 1 }, 'secret')}`);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES.ERRORS.POST.NOT_FOUND);
+    });
+
+    // it.only('Should return error when delete user\'s post fails', async () => {
+    //   const post = MOCKS_POSTS[0];
+    //   jest.spyOn(Post, 'findOne').mockResolvedValue(post as any);
+    //   const validateTokenSpy = jest.spyOn(authMiddleware, 'validateToken')
+    //     .mockImplementation(() => {
+    //       return (req: any, _res: any, next: any) => {
+    //         req.userId = 1;
+    //         req.isAdmin = false; // ép false
+    //         next();
+    //       };
+    //     });
+    //   const token = jwt.encode({ userId: 1, isAdmin: false }, 'secret');
+    //   const response = await request(app)
+    //     .delete(`${API_ENDPOINTS.USERS_POST_ID}`.replace(':userId', '2').replace(':id', post.id.toString()))
+    //     .set('Authorization', `Bearer ${token}`);
+
+    //   expect(response.status).toBe(STATUS_CODE.FORBIDDEN);
+    //   expect(response.body.message).toBe('Forbidden');
+
+    //   validateTokenSpy.mockRestore();
+    // });
+    it('Should return error when delete user\'s post fails', async () => {
+      const express = require('express');
+      const testApp = express();
+    
+      // Middleware mock validateToken
+      testApp.delete(API_ENDPOINTS.USERS_POST_ID, 
+        (req: any, _res: any, next: any) => {
+          req.userId = 1;
+          req.isAdmin = false;
+          next();
+        }, 
+        postController.deleteUsersPostById
       );
-      (userServices.getUserById as jest.Mock).mockResolvedValueOnce({ userId: 1 });
-      (postService.getPostByAuthorId as jest.Mock).mockRejectedValueOnce(error);
-
-      await postController.deleteUsersPostById(req as Request, res as Response, next as NextFunction);
-      expect(next).toHaveBeenCalledWith(error);
+    
+      jest.spyOn(Post, 'findOne').mockResolvedValue(MOCKS_POSTS[0] as any);
+    
+      const response = await request(testApp)
+        .delete(`${API_ENDPOINTS.USERS_POST_ID}`
+          .replace(':userId', '2')
+          .replace(':id', MOCKS_POSTS[0].id.toString())
+        );
+    
+      expect(response.status).toBe(STATUS_CODE.FORBIDDEN);
     });
   });
 });

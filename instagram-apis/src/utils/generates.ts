@@ -21,19 +21,17 @@ export const generateToken = {
         // Calculate refresh token expiration time: 30 days from now (in Unix timestamp)
         const refreshExpirationTime = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60); // 30 days
 
-        const refereshPayload = {
+        const refreshPayload = {
             sub: userId,
             type: 'refresh',
             exp: refreshExpirationTime
         };
 
-        return jwt.encode(refereshPayload, REFRESH_TOKEN_SECRET);
+        return jwt.encode(refreshPayload, REFRESH_TOKEN_SECRET);
     },
 
     decodeToken: (token: string) => {
         try {
-            console.log("decodeToken", token);
-            console.log("JWT_SECRET", jwt.decode(token, JWT_SECRET));
             return jwt.decode(token, JWT_SECRET);
         } catch (error) {
             throw error;

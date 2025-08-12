@@ -3,7 +3,7 @@ import { Application, NextFunction } from 'express';
 
 import { API_ENDPOINTS } from '@/constants';
 import { postController } from '@/controllers';
-import validateToken from '@/middlewares/auth.middleware';
+import { validateToken } from '@/middlewares/auth.middleware';
 import { validateRequest } from '@/middlewares/validate-request.middleware';
 import { createPostSchema, updatePostSchema } from '@/validation';
 import { RequestAuthenticationType } from '@/types';

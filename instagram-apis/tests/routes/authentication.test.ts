@@ -1,7 +1,9 @@
 // libs
 import request from "supertest";
-import express, { Application } from "express"
+import express, { Application, Express } from "express";
+import bodyParser from 'body-parser';
 
+import { sequelize } from "@/configs";
 import { authenticationController } from "@/controllers";
 import { authenticationRouter } from "@/routes/authetication.route";
 import { API_ENDPOINTS, STATUS_CODE, MESSAGES_AUTHENTICATION } from "@/constants";
@@ -15,18 +17,22 @@ jest.mock('@/controllers/authentication.controller', () => ({
   }
 }));
 
-describe('Authentication routes for authen success ', () => {
-  
-  let app: Application;
+const app: Express = express();
+app.use(bodyParser.json());
 
-  beforeAll(() => {
-    app = express();
-    app.use(express.json());
+describe('Authentication routes for authentication success ', () => {
+
+  beforeAll(async () => {
+    await sequelize.sync({ force: true });
     authenticationRouter(app);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await sequelize.close();
   });
 
   it(`POST: ${API_ENDPOINTS.LOGIN} success`, async () => {

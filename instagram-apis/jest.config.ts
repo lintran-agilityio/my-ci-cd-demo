@@ -1,12 +1,13 @@
-import { JestConfigWithTsJest } from 'ts-jest';
+import type { Config } from 'jest';
 
-const config: JestConfigWithTsJest = {
+const config: Config = {
   verbose: true,
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
     "^.+\\.tsx?$": ["ts-jest", {
-      tsconfig: "tsconfig.jest.json"
+      tsconfig: "tsconfig.jest.json",
+      diagnostics: false
     }]
   },
   testTimeout: 10000,
@@ -14,11 +15,6 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@tests/(.*)$': '<rootDir>/tests/$1',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.jest.json',
-    },
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [

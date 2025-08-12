@@ -77,7 +77,7 @@ describe('Users controller', () => {
           limit: LIMIT,
           offset: OFFSET
         });
-console.log('response', response.body.data);
+
       expect(response.status).toBe(STATUS_CODE.OK);
       expect(response.body.data?.rows[0]).toHaveProperty("email", "user@gm.com");
       expect(response.body.data?.rows[0]).not.toHaveProperty("password");
@@ -135,7 +135,7 @@ console.log('response', response.body.data);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
     });
 
-    it('Should return error: server error', async () => {
+    it('Get user by ID - should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
@@ -187,10 +187,6 @@ console.log('response', response.body.data);
     });
 
     it('Should return error: duplicate email in data', async () => {
-      const users = User.findAll({
-        where: {}
-      });
-      console.log("users", users);
       jest.spyOn(User, "findAll").mockResolvedValueOnce([
         {
           ...LIST_USERS[0],
@@ -208,7 +204,7 @@ console.log('response', response.body.data);
       expect(response.body.message).toBe("Some emails already exist");
     });
 
-    it('Should return error: server error', async () => {
+    it('Update list user - should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
@@ -259,7 +255,7 @@ console.log('response', response.body.data);
       expect(response.body.message).toBe(MESSAGES.SUCCESS.DELETE);
     });
 
-    it('Should return error: server error', async () => {
+    it('Delete user - should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
@@ -300,7 +296,7 @@ console.log('response', response.body.data);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
     });
 
-    it('Should return error: server error', async () => {
+    it('Delete user by id - should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
