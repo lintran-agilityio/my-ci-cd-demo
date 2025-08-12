@@ -18,7 +18,7 @@ export const MESSAGES_AUTHENTICATION = {
     PERMISSION_DENIED: 'Permission denied',
     ACCESS_TOKEN_EXPIRED: 'Access token expired',
     ACCESS_DENIED: 'Access denied, no access token provided',
-    INTERNAL_SERVER_ERROR: 'Authentication faild',
+    INTERNAL_SERVER_ERROR: 'Authentication fail',
     INVALID_TOKEN: 'Invalid token',
     INVALID_EMAIL_PASSWORD: 'Invalid email or password',
     SUCCESSFUL: 'Success',

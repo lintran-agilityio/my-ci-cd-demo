@@ -130,7 +130,6 @@ describe('Authentication controller', () => {
     it('Should user login: user login', async () => {
       jest.spyOn(User, 'findOne').mockResolvedValue(mockUserInstance);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      // (jest.spyOn as any)(bcrypt, 'compare').mockResolvedValue(true);
 
       jest.mock('jwt-simple', () => ({
         encode: jest.fn().mockReturnValue('fake_token')
@@ -171,6 +170,30 @@ describe('Authentication controller', () => {
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
+    });
+
+    it('Should return null when password is invalid', async () => {
+      // Mock a found user
+      jest.spyOn(User, 'findOne').mockResolvedValue({
+        toJSON: () => ({
+          userId: 2,
+          email: 'usera@gmail.com',
+          username: 'lintran',
+          password: 'hashed_password',
+          isAdmin: false
+        })
+      } as any);
+    
+      // Mock compare to fail
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+    
+      const response = await request(app)
+        .post(API_ENDPOINTS.LOGIN)
+        .send(USER_PAYLOAD_LOGIN);
+    
+      // Since your login controller should return null => Unauthorized
+      expect(response.status).toBe(STATUS_CODE.UNAUTHORIZED);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INVALID_EMAIL_PASSWORD);
     });
   });
 });

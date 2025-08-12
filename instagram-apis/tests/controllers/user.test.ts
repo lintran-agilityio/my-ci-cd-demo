@@ -26,6 +26,7 @@ app.use(bodyParser.json());
 
 const { DEFAULT: { LIMIT, OFFSET } } = PAGINATION;
 const seededUserId = 1;
+const DATABASE_ERROR = 'Database error';
 
 describe('Users controller', () => {
   beforeAll(async () => {
@@ -199,6 +200,20 @@ describe('Users controller', () => {
       expect(response.body.message).toBe("Some emails already exist");
     });
 
+    it('Should return server error when get duplicate email in data', async () => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
+      jest.spyOn(User, "findAll").mockRejectedValue(error);
+      const response = await request(app)
+        .put(API_ENDPOINTS.USERS)
+        .send({
+          users: [
+            { ...USER_PAYLOAD, email: "a@gmail.com", userId: 2 }
+          ]
+        });
+        expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+        expect(response.body.message).toBe(DATABASE_ERROR);
+    });
+
     it('Should return error: no users found', async () => {
       jest.spyOn(User, 'findAll').mockResolvedValue([]);
       jest.spyOn(User, 'update').mockResolvedValue([0] as any);
@@ -272,6 +287,19 @@ describe('Users controller', () => {
         .send({ username: 'Admin', email: existingEmail });
       expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
       expect(response.body.message).toBe(`Email ${existingEmail} existing`);
+    });
+
+    it('Should return server error when check email existing', async() => {
+      const existingEmail = 'a@gmail.com';
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
+      jest.spyOn(User, 'findOne').mockRejectedValue(error);
+
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.USERS}/${seededUserId}`)
+        .send({ username: 'Admin', email: existingEmail });
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
 
     it('Should return error: user not found', async () => {

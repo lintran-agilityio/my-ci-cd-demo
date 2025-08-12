@@ -188,6 +188,20 @@ describe('Comments controller', () => {
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
       expect(response.body.message).toBe(errorMessage);
     });
+
+    it('Should return error: when create a comment', async() => {
+      const errorMessage = MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR;
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, errorMessage);
+      jest.spyOn(Post, "findByPk").mockResolvedValue(MOCKS_POSTS[0] as any);
+      jest.spyOn(Comment, "create").mockRejectedValue(error);
+
+      const response = await request(app)
+        .post(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'))
+        .send({ content: 'This is a comment1' });
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(errorMessage);
+    });
   });
 
   describe('Comments: Delete comment for post', () => {
@@ -249,7 +263,7 @@ describe('Comments controller', () => {
       expect(response.body.message).toBe(errorMessage);
     });
 
-    it('Delete user - should return error: server error', async () => {
+    it('Delete comments - should return error: server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR

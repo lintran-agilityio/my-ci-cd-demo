@@ -14,6 +14,7 @@ import { postController } from '@/controllers';
 import HttpExceptionError from '@/exceptions';
 import * as authMiddleware from '@/middlewares/auth.middleware';
 import { postService } from '@/services';
+import * as findAllDataModule from '@/utils/pagination';
 
 jest.mock('@/middlewares/auth.middleware', () => ({
   validateToken: () => (req: RequestAuthenticationType, _res: Response, next: NextFunction) => {
@@ -28,6 +29,7 @@ app.use(bodyParser.json());
 
 describe('Posts Controller', () => {
   const { OFFSET, LIMIT } = PAGINATION.DEFAULT;
+  const DATABASE_ERROR = 'Database error';
   beforeAll(async () => {
     await sequelize.sync({ force: true });
   });
@@ -81,14 +83,15 @@ describe('Posts Controller', () => {
     });
 
     it('should get error when get posts', async () => {
-      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
       jest.spyOn(Post, 'findAndCountAll').mockRejectedValue(error);
+      jest.spyOn(findAllDataModule, 'findAllData').mockRejectedValue(error);
       const response = await request(app)
         .get(API_ENDPOINTS.POSTS)
         .query({ offset: OFFSET, limit: LIMIT });
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-      expect(response.body.message).toBe('Database error');
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
   });
 
@@ -124,13 +127,13 @@ describe('Posts Controller', () => {
     });
 
     it('Should return error when get post by ID', async () => {
-      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
       jest.spyOn(Post, 'findByPk').mockRejectedValue(error);
       const response = await request(app)
         .get(`${API_ENDPOINTS.POSTS}/1`);
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-      expect(response.body.message).toBe('Database error');
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
   });
 
@@ -178,6 +181,18 @@ describe('Posts Controller', () => {
       expect(response.body.message).toBe(MESSAGES.ERRORS.POST.INVALID_SLUG);
     });
 
+    it('Should return server error when find slug existing', async() => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
+      jest.spyOn(Post, 'findOne').mockRejectedValue(error);
+
+      const response = await request(app)
+        .post(API_ENDPOINTS.POSTS)
+        .send({ ...MOCKS_POSTS[0], authorId: 999 });
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(DATABASE_ERROR);
+    });
+
     it('Should return error when user not found', async () => {
       jest.spyOn(Post, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'findByPk').mockResolvedValue(null);
@@ -190,7 +205,7 @@ describe('Posts Controller', () => {
     });
 
     it('Should return error when create post fails', async () => {
-      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
       jest.spyOn(Post, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'findByPk').mockResolvedValue({
         userId: 1,
@@ -208,7 +223,7 @@ describe('Posts Controller', () => {
         .send(MOCKS_POSTS[0]);
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-      expect(response.body.message).toBe('Database error');
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
   });
 
@@ -252,6 +267,34 @@ describe('Posts Controller', () => {
         .send(updatedPost);
 
       expect(response.status).toBe(STATUS_CODE.NO_CONTENT);
+    });
+
+    it('Should return server error when update a post', async() => {
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
+      const updatedPost = { ...MOCKS_POSTS[0], title: 'Updated Title' };
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        userId: 1,
+        username: 'testuser',
+        email: 'test@example.com',
+        toJSON: () => ({
+          userId: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+        }),
+      } as any);
+      jest.spyOn(postService, 'getPostByAuthorId').mockResolvedValue({
+        ...MOCKS_POSTS[0],
+        update: jest.fn().mockRejectedValue(error),
+      } as any);
+      jest.spyOn(Post, 'findOne').mockResolvedValue(null as any);
+      
+      jest.spyOn(Post.prototype, 'update').mockRejectedValue(error);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.POSTS}/${updatedPost.id}`)
+        .send(updatedPost);
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
 
     it('Should return error User not found when updating post', async () => {
@@ -320,7 +363,7 @@ describe('Posts Controller', () => {
           email: 'test@example.com',
         }),
       } as any);
-      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, 'Database error');
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, DATABASE_ERROR);
       jest.spyOn(Post, 'findByPk').mockResolvedValue(MOCKS_POSTS[0] as any);
       jest.spyOn(Post, 'update').mockRejectedValue(error);
       const response = await request(app)
@@ -366,12 +409,12 @@ describe('Posts Controller', () => {
     });
 
     it('Should return error when delete posts fails', async () => {
-      jest.spyOn(Post, 'destroy').mockRejectedValue(new Error('Database error'));
+      jest.spyOn(Post, 'destroy').mockRejectedValue(new Error(DATABASE_ERROR));
       const response = await request(app)
         .delete(API_ENDPOINTS.POSTS);
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-      expect(response.body.message).toBe('Database error');
+      expect(response.body.message).toBe(DATABASE_ERROR);
     });
   });
 

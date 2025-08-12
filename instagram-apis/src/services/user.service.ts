@@ -8,7 +8,7 @@ import { findAllData, omitField } from "@/utils";
 class UserServices {
   getAll = async (offset: number, limit: number) => {
     try {
-      return findAllData({
+      return await findAllData({
         model: User,
         offset,
         limit,

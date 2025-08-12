@@ -1,5 +1,4 @@
 import { Comment, Post, User } from "@/models";
-import { findAllData } from "@/utils";
 
 type ParamCreateCommentType = {
   postId: number;

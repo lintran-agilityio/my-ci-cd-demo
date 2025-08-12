@@ -1,4 +1,4 @@
-import { MESSAGES, MESSAGES_VALIDATION } from "@/constants";
+import { MESSAGES_VALIDATION } from "@/constants";
 import { Post } from "@/models";
 import { IPostAttributes } from "@/models/Post.model";
 import { findAllData } from "@/utils";
@@ -6,7 +6,7 @@ import { findAllData } from "@/utils";
 class PostServices {
   getAll = async (offset: number, limit: number) => {
     try {
-      return findAllData({
+      return await findAllData({
         model: Post,
         offset,
         limit,
@@ -19,7 +19,7 @@ class PostServices {
 
   existSlug = async (slug: string) => {
     try {
-      return Post.findOne({ where: { slug }});
+      return await Post.findOne({ where: { slug }});
     } catch (error: unknown) {
       throw error;
     }
@@ -35,7 +35,7 @@ class PostServices {
 
   get = async (postId: number) => {
     try {
-      return Post.findByPk(postId)
+      return await Post.findByPk(postId)
     } catch (error) {
       throw error;
     }
@@ -43,7 +43,7 @@ class PostServices {
 
   getPostByAuthorId = async (userId: number, postId: number) => {
     try {
-      return Post.findOne({
+      return await Post.findOne({
         where: {
           id: postId,
           authorId: userId
