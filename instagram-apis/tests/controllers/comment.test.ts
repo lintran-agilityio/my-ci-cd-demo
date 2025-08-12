@@ -23,6 +23,7 @@ import { Comment, Post } from '@/models';
 import { MOCKS_POSTS } from '@/mocks';
 import { validateToken } from '@/middlewares/auth.middleware';
 import * as utils from '@/utils';
+import { commentServices } from '@/services';
 
 const app: Express = express();
 app.use(bodyParser.json());
@@ -247,6 +248,20 @@ describe('Comments controller', () => {
       expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
       expect(response.body.message).toBe(errorMessage);
     });
+
+    it('Delete user - should return error: server error', async () => {
+      const error = new HttpExceptionError(
+        STATUS_CODE.INTERNAL_SERVER_ERROR,
+        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
+      );
+      jest.spyOn(commentServices, 'deletePostsComments').mockRejectedValue(error);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1'));
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
+    });
   });
 
   describe('Comments: delete comment by ID', () => {
@@ -279,6 +294,20 @@ describe('Comments controller', () => {
 
       expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
       expect(response.body.message).toBe(errorMessage);
+    });
+
+    it('Delete user - should return error: server error', async () => {
+      const error = new HttpExceptionError(
+        STATUS_CODE.INTERNAL_SERVER_ERROR,
+        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
+      );
+      jest.spyOn(commentServices, 'deletePostsCommentById').mockRejectedValue(error);
+
+      const response = await request(app)
+        .delete(API_ENDPOINTS.POST_COMMENTS.replace(':id', '1').replace(':commentId', '1'));
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe( MESSAGES.ERRORS.COMMENT.NOT_FOUND_COMMENT_OR_POST);
     });
   });
 });

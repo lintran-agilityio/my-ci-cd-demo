@@ -13,12 +13,10 @@ import { API_ENDPOINTS, MESSAGES, MESSAGES_AUTHENTICATION, MESSAGES_VALIDATION, 
 import { postController } from '@/controllers';
 import HttpExceptionError from '@/exceptions';
 import * as authMiddleware from '@/middlewares/auth.middleware';
-import { count } from 'console';
-import de from 'zod/v4/locales/de.cjs';
-import { postService, userServices } from '@/services';
+import { postService } from '@/services';
 
 jest.mock('@/middlewares/auth.middleware', () => ({
-  validateToken: () => (req: RequestAuthenticationType, res: Response, next: NextFunction) => {
+  validateToken: () => (req: RequestAuthenticationType, _res: Response, next: NextFunction) => {
     req.userId = 1;
     req.isAdmin = true;
     next();
@@ -415,27 +413,19 @@ describe('Posts Controller', () => {
       expect(response.body.message).toBe(MESSAGES.ERRORS.POST.NOT_FOUND);
     });
 
-    // it.only('Should return error when delete user\'s post fails', async () => {
-    //   const post = MOCKS_POSTS[0];
-    //   jest.spyOn(Post, 'findOne').mockResolvedValue(post as any);
-    //   const validateTokenSpy = jest.spyOn(authMiddleware, 'validateToken')
-    //     .mockImplementation(() => {
-    //       return (req: any, _res: any, next: any) => {
-    //         req.userId = 1;
-    //         req.isAdmin = false; // ép false
-    //         next();
-    //       };
-    //     });
-    //   const token = jwt.encode({ userId: 1, isAdmin: false }, 'secret');
-    //   const response = await request(app)
-    //     .delete(`${API_ENDPOINTS.USERS_POST_ID}`.replace(':userId', '2').replace(':id', post.id.toString()))
-    //     .set('Authorization', `Bearer ${token}`);
+    it('Should return error when user is not authorized to delete post', async () => {
+      const post = MOCKS_POSTS[0];
+      const errorMessage = "Database error";
+      const error = new HttpExceptionError(STATUS_CODE.INTERNAL_SERVER_ERROR, errorMessage);
+      jest.spyOn(Post, 'findOne').mockResolvedValue({ ...post} as any);
+      jest.spyOn(Post, 'destroy').mockRejectedValue(error);
+      const response = await request(app)
+        .delete(`${API_ENDPOINTS.USERS_POST_ID}`.replace(':userId', '2').replace(':id', post.id.toString()))
+        .set('Authorization', `Bearer ${jwt.encode({ userId: 1 }, 'secret')}`);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(errorMessage);
+    });
 
-    //   expect(response.status).toBe(STATUS_CODE.FORBIDDEN);
-    //   expect(response.body.message).toBe('Forbidden');
-
-    //   validateTokenSpy.mockRestore();
-    // });
     it('Should return error when delete user\'s post fails', async () => {
       const express = require('express');
       const testApp = express();

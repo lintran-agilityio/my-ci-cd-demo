@@ -9,48 +9,35 @@ import { userController } from "@/controllers";
 import { API_ENDPOINTS, MESSAGES_AUTHENTICATION, STATUS_CODE, PAGINATION, MESSAGES } from '@/constants';
 import HttpExceptionError from '@/exceptions';
 import { USER_PAYLOAD, LIST_USERS } from '@/mocks';
-import { User } from '@/models';
-import { findAllData } from '@/utils';
+import { Post, User, Comment } from '@/models';
 import { userServices } from '@/services';
+import { RequestAuthenticationType } from '@/types';
 
-jest.mock('@/utils', () => ({
-  ...jest.requireActual('@/utils'),
-  findAllData: jest.fn()
+jest.mock('@/middlewares/auth.middleware', () => ({
+  validateToken: () => (req: RequestAuthenticationType, _res: Response, next: NextFunction) => {
+    req.userId = 1;
+    req.isAdmin = true;
+    next();
+  },
 }));
 
 const app: Express = express();
 app.use(bodyParser.json());
 
 const { DEFAULT: { LIMIT, OFFSET } } = PAGINATION;
+const seededUserId = 1;
 
 describe('Users controller', () => {
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: Partial<NextFunction>;
-  let seededUserId: number;
-
   beforeAll(async () => {
     await sequelize.sync({ force: true });
-    const user = await User.create({ ...USER_PAYLOAD, isAdmin: true });
-
-    seededUserId = user.userId;
-  });
-
-  beforeEach(() => {
-    req = {
-      body: USER_PAYLOAD
-    };
-
-    res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn()
-    }
-
-    next = jest.fn();
   });
 
   afterEach(async () => {
-    jest.clearAllMocks();
+    await sequelize.query('PRAGMA foreign_keys = OFF;');
+    await sequelize.truncate({ cascade: true });
+    await sequelize.query('PRAGMA foreign_keys = ON;');
+  
+    jest.restoreAllMocks();
   });
 
   afterAll(async () => {
@@ -66,9 +53,9 @@ describe('Users controller', () => {
     });
 
     it('Should get all users: get users', async () => {
-      (findAllData as jest.Mock).mockResolvedValue({
-        count: LIST_USERS.length,
-        rows: LIST_USERS
+      jest.spyOn(User, 'findAndCountAll').mockResolvedValueOnce({
+        rows: LIST_USERS,
+        count: LIST_USERS.length
       } as any);
 
       const response = await request(app)
@@ -78,28 +65,35 @@ describe('Users controller', () => {
           offset: OFFSET
         });
 
-      expect(response.status).toBe(STATUS_CODE.OK);
-      expect(response.body.data?.rows[0]).toHaveProperty("email", "user@gm.com");
-      expect(response.body.data?.rows[0]).not.toHaveProperty("password");
+      const { status, body } = response;
+      expect(status).toBe(STATUS_CODE.OK);
+      expect(body.data).toEqual({
+        data: LIST_USERS,
+        meta: {
+          pagination: {
+            limit: LIMIT,
+            offset: OFFSET,
+            total: LIST_USERS.length,
+          }
+        }
+      });
+      expect(body.data?.data[0]).not.toHaveProperty("password");
     });
 
-    it('Should return error: no users found', async () => {
-      
+    it('Should return error server error', async () => {
       const error = new HttpExceptionError(
         STATUS_CODE.INTERNAL_SERVER_ERROR,
         MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
       );
-      (findAllData as jest.Mock).mockRejectedValue(error);
-
+      jest.spyOn(User, 'findAndCountAll').mockRejectedValue(error);
       const response = await request(app)
         .get(API_ENDPOINTS.USERS)
         .query({
           limit: LIMIT,
           offset: OFFSET
         });
-
-        expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-        expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
   });
 
@@ -110,26 +104,25 @@ describe('Users controller', () => {
     app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
       res.status(err.status || 500).json({ message: err.message });
     });
-    it.skip('Should get user by id: get user', async () => {
+    it('Should get user by id: get user', async () => {
+      const user = LIST_USERS[0];
       jest.spyOn(User, 'findByPk').mockResolvedValue({
-        ...LIST_USERS[0],
-        userId: seededUserId
+        ...user,
+        toJSON: () => (user),
       } as any);
       const response = await request(app)
         .get(`${API_ENDPOINTS.USERS}/${seededUserId}`);
 
-      expect(response.status).toBe(STATUS_CODE.OK);
-      expect(response.body.data).toHaveProperty("email", "user@gm.com");
-      expect(response.body.data).not.toHaveProperty("password");
+      const { status, body } = response;
+      expect(status).toBe(STATUS_CODE.OK);
+      expect(body.data).toEqual(user)  ;
+      expect(body.data).not.toHaveProperty("password");
     });
 
-    it.skip('Should return error: user not found', async () => {
-      jest.spyOn(User, 'findByPk').mockResolvedValue({
-        ...LIST_USERS[0],
-        userId: seededUserId
-      } as any);
+    it('Should return error: user not found', async () => {
+      jest.spyOn(User, 'findByPk').mockResolvedValue(null);
       const response = await request(app)
-        .get(`${API_ENDPOINTS.USERS}/9999`);
+        .get(`${API_ENDPOINTS.USERS}/${seededUserId}`);
 
       expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
@@ -150,27 +143,29 @@ describe('Users controller', () => {
     });
   });
 
-  describe('Users: update list users ', () => {
+  describe('Users: update user', () => {
     app.put(`${API_ENDPOINTS.USERS}`, userController.updateUsers);
 
     // Middleware handle error
     app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
       res.status(err.status || 500).json({ message: err.message });
     });
-    it('Should update list users', async () => {
-      const newEmail = 'testUpdate@gmail.com';
+
+    it('Should update users: update list users', async () => {
+      const newEmail = 'emailUpdate@gmail.com';
+      const users = LIST_USERS.map(user => ({ ...user, email: newEmail }));
+      jest.spyOn(User, 'findAll').mockResolvedValue([]);
       jest.spyOn(User, 'update').mockResolvedValue([1] as any);
+      jest.spyOn(User, 'findOne').mockResolvedValue(users as any);
       const response = await request(app)
         .put(API_ENDPOINTS.USERS)
         .send({
-          users: [
-            { ...USER_PAYLOAD, userId: seededUserId, email: newEmail },
-          ]
+          users
         });
-
-      expect(response.status).toBe(STATUS_CODE.OK);
-      expect(response.body.message).toBe(MESSAGES.SUCCESS.UPDATE);
-      expect(response.body.data[0]).toHaveProperty("email", "user@gmail.com");
+      const { status, body } = response;
+      expect(status).toBe(STATUS_CODE.OK);
+      expect(body.message).toBe(MESSAGES.SUCCESS.UPDATE);
+      expect(body.data).toEqual([users]);
     });
 
     it('Should return error: duplicate email in payload', async () => {
@@ -190,18 +185,33 @@ describe('Users controller', () => {
       jest.spyOn(User, "findAll").mockResolvedValueOnce([
         {
           ...LIST_USERS[0],
-          email: "testUpdate@gmail.com"
+          email: "a@gmail.com"
         }
       ] as any);
       const response = await request(app)
         .put(API_ENDPOINTS.USERS)
         .send({
           users: [
-            { ...USER_PAYLOAD, email: "testUpdate@gmail.com", userId: 2 }
+            { ...USER_PAYLOAD, email: "a@gmail.com", userId: 2 }
           ]
         });
       expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
       expect(response.body.message).toBe("Some emails already exist");
+    });
+
+    it('Should return error: no users found', async () => {
+      jest.spyOn(User, 'findAll').mockResolvedValue([]);
+      jest.spyOn(User, 'update').mockResolvedValue([0] as any);
+      const response = await request(app)
+        .put(API_ENDPOINTS.USERS)
+        .send({
+          users: [
+            { ...USER_PAYLOAD, userId: seededUserId }
+          ]
+        });
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES.NOT_FOUND);
     });
 
     it('Update list user - should return error: server error', async () => {
@@ -222,22 +232,102 @@ describe('Users controller', () => {
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
+  });
 
-    it('Should return error: no users found', async () => {
+  describe('Users: update user by id', () => {
+    app.put(`${API_ENDPOINTS.USERS}/:userId`, userController.updateUserById);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    it('Should update user by id: update user', async () => {
+      const payload = { username: 'Admin', email: 'a@gmail.com', isAdmin: true };
+      const user = { ...LIST_USERS[0], ...payload };
+      jest.spyOn(User, 'findOne').mockResolvedValue(null);
+      jest.spyOn(User, 'update').mockResolvedValue([1] as any);
+      jest.spyOn(User, 'findByPk').mockResolvedValue({
+        ...user,
+        toJSON: () => (user),
+      } as any);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.USERS}/${seededUserId}`)
+        .send(payload);
+      const { status, body } = response;
+      expect(status).toBe(STATUS_CODE.OK);
+      expect(body.message).toBe(MESSAGES.SUCCESS.UPDATE);
+      expect(body.data).toEqual(user);
+    });
+
+    it('Should return error: email already exists', async () => {
+      const existingEmail = 'a@gmail.com';
+      jest.spyOn(User, 'findOne').mockResolvedValue({
+        toJSON() {
+          return LIST_USERS[0];
+        }
+      } as any);
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.USERS}/${seededUserId}`)
+        .send({ username: 'Admin', email: existingEmail });
+      expect(response.status).toBe(STATUS_CODE.BAD_REQUEST);
+      expect(response.body.message).toBe(`Email ${existingEmail} existing`);
+    });
+
+    it('Should return error: user not found', async () => {
+      jest.spyOn(User, 'findOne').mockResolvedValue(null);
       jest.spyOn(User, 'update').mockResolvedValue([0] as any);
       const response = await request(app)
-        .put(API_ENDPOINTS.USERS)
-        .send({
-          users: [
-            { ...USER_PAYLOAD, userId: seededUserId }
-          ]
-        });
+        .put(`${API_ENDPOINTS.USERS}/${seededUserId}`)
+        .send({ username: 'Admin' });
 
       expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
-      expect(response.body.message).toBe(MESSAGES.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
+    });
+
+    it('Update user by ID - should return error: server error', async () => {
+      const error = new HttpExceptionError(
+        STATUS_CODE.INTERNAL_SERVER_ERROR,
+        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
+      );
+      jest.spyOn(User, 'update').mockRejectedValue(error);
+
+      const response = await request(app)
+        .put(`${API_ENDPOINTS.USERS}/${seededUserId}`)
+        .send({ username: 'Admin' });
+
+      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
     });
   });
-  
+
+  describe('Users: delete user by id', () => {
+    app.delete(`${API_ENDPOINTS.USERS}/:userId`, userController.deleteUserById);
+
+    // Middleware handle error
+    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
+      res.status(err.status || 500).json({ message: err.message });
+    });
+
+    it('Should delete user by id: delete user', async () => {
+      jest.spyOn(User, 'destroy').mockResolvedValue(1 as any);
+      const response = await request(app)
+        .delete(`${API_ENDPOINTS.USERS}/${seededUserId}`);
+
+      expect(response.status).toBe(STATUS_CODE.OK);
+      expect(response.body.message).toBe(MESSAGES.SUCCESS.DELETE);
+    });
+    
+    it('Should return error: user not found', async () => {
+      jest.spyOn(User, 'destroy').mockResolvedValue(0 as any);
+      const response = await request(app)
+        .delete(`${API_ENDPOINTS.USERS}/${seededUserId}`);
+
+      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
+      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
+    });
+  });
+
   describe('Users: delete users', () => {
     app.delete(API_ENDPOINTS.USERS, userController.deleteUsers);
 
@@ -247,6 +337,8 @@ describe('Users controller', () => {
     });
 
     it('Should delete all users', async () => {
+      jest.spyOn(Comment, 'destroy').mockResolvedValue(1 as any);
+      jest.spyOn(Post, 'destroy').mockResolvedValue(1 as any);
       jest.spyOn(User, 'destroy').mockResolvedValue(1 as any);
       const response = await request(app)
         .delete(API_ENDPOINTS.USERS);
@@ -264,47 +356,6 @@ describe('Users controller', () => {
 
       const response = await request(app)
         .delete(API_ENDPOINTS.USERS);
-
-      expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
-      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);
-    });
-  });
-
-  describe('Users: delete user by id', () => {
-    app.delete(`${API_ENDPOINTS.USERS}/:userId`, userController.deleteUserById);
-
-    // Middleware handle error
-    app.use((err: HttpExceptionError, _req: Request, res: Response, _next: NextFunction) => {
-      res.status(err.status || 500).json({ message: err.message });
-    });
-
-    it('Should delete user by id', async () => {
-      jest.spyOn(User, 'destroy').mockResolvedValue(1 as any);
-      const response = await request(app)
-        .delete(`${API_ENDPOINTS.USERS}/${seededUserId}`);
-
-      expect(response.status).toBe(STATUS_CODE.OK);
-      expect(response.body.message).toBe(MESSAGES.SUCCESS.DELETE);
-    });
-
-    it('Should return error: user not found', async () => {
-      jest.spyOn(User, 'destroy').mockResolvedValue(0 as any);
-      const response = await request(app)
-        .delete(`${API_ENDPOINTS.USERS}/9999`);
-
-      expect(response.status).toBe(STATUS_CODE.NOT_FOUND);
-      expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.USER_NOT_FOUND);
-    });
-
-    it('Delete user by id - should return error: server error', async () => {
-      const error = new HttpExceptionError(
-        STATUS_CODE.INTERNAL_SERVER_ERROR,
-        MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR
-      );
-      jest.spyOn(userServices, 'deleteUserById').mockRejectedValue(error);
-
-      const response = await request(app)
-        .delete(`${API_ENDPOINTS.USERS}/${seededUserId}`);
 
       expect(response.status).toBe(STATUS_CODE.INTERNAL_SERVER_ERROR);
       expect(response.body.message).toBe(MESSAGES_AUTHENTICATION.INTERNAL_SERVER_ERROR);

@@ -48,7 +48,7 @@ class UserServices {
       return await User.findOne({
         where: {
           email,
-          userId: { [Op.ne]: userId }, // id khác user đang update
+          userId: { [Op.ne]: userId },
         },
       });
     } catch (error: unknown) {
