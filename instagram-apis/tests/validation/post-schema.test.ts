@@ -7,7 +7,7 @@ describe("Post validation", () => {
 
   it("should pass when all fields are valid", () => {
     const result = postSchema.safeParse(validPost);
-      expect(result.success).toBe(true);
+    expect(result.success).toBe(true);
   });
 
   it("should fail when authorId is not a number", () => {
@@ -20,7 +20,7 @@ describe("Post validation", () => {
   it("should fail when content is empty", () => {
     const result = postSchema.safeParse({ ...validPost, title: "", slug: "", content: "" });
     const { success, error } = result;
-    console.log("error?.issues", error?.issues)
+
     expect(success).toBe(false);
     expect(error?.issues[0].message).toBe(REQUIRED_MESSAGE("title"));
     expect(error?.issues[1].message).toBe(REQUIRED_MESSAGE("slug"));

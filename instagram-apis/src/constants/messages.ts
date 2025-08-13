@@ -5,7 +5,6 @@ export const MESSAGES_VALIDATION = {
     PASSWORD_INVALID: 'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character',
     INVALID_USERNAME_PASSWORD: 'Username or password is invalid',
     INVALID_EMAIL: 'Invalid email address',
-    INVALID_ID: 'ID must be a positive integer',
     INVALID_AUTHOR_ID: 'Invalid author ID',
     INVALID_ID_NUMBER: 'ID must be a valid number',
     INVALID_SLUG_POST: 'Slug already exists'

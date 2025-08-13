@@ -29,9 +29,8 @@ class AuthenticationService {
     try {
       const user = await User.findOne({ where: { email } });
       if (!user) return null;
-      const userData = user.toJSON();
-      const isValidPassword = await compare(password, userData.password);
 
+      const isValidPassword = await compare(password, user.password);
       return isValidPassword ? omitField(user.toJSON(), 'password') : null;
     } catch (error) {
       throw error;

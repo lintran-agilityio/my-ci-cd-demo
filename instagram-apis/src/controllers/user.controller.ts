@@ -67,7 +67,7 @@ class UsersController {
       }
       const dataRes = await userServices.updateUsers(users);
 
-      if (dataRes && dataRes.length === 0) {
+      if (dataRes && !dataRes.length) {
         return next(new HttpExceptionError(STATUS_CODE.NOT_FOUND, MESSAGES.NOT_FOUND));
       }
 
