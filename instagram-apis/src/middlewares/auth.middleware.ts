@@ -38,7 +38,6 @@ const validateToken = (isValidAdmin?: boolean) => {
 
       next();
     } catch (error) {
-      // console.log("Error decoding token:", error);
       next(new HttpExceptionError(STATUS_CODE.UNAUTHORIZED, MESSAGES_AUTHENTICATION.INVALID_TOKEN));
     }
   }
