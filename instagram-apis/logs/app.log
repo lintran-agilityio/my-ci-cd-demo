@@ -1,0 +1,132 @@
+[2025-08-04 16:20:07] INFO: Server is running on http://localhost:3001
+[2025-08-04 16:22:56] INFO: Server is running on http://localhost:3001
+[2025-08-04 16:22:59] INFO: Server is running on http://localhost:3001
+[2025-08-04 16:23:38] INFO: Server is running on http://localhost:3001
+[2025-08-04 16:24:05] INFO: Server is running on http://localhost:3001
+[2025-08-04 16:25:32] INFO: Server is running on http://localhost:3001
+[2025-08-04 17:44:31] INFO: Server is running on http://localhost:3001
+[2025-08-04 17:44:38] INFO: Server is running on http://localhost:3001
+[2025-08-04 17:44:42] INFO: Server is running on http://localhost:3001
+[2025-08-04 17:44:45] INFO: Server is running on http://localhost:3001
+[2025-08-12 18:14:38] ERROR: Authentication faild
+[2025-08-12 18:14:38] ERROR: Authentication faild
+[2025-08-12 18:14:38] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:38] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Authentication faild
+[2025-08-12 18:14:39] ERROR: Database error
+[2025-08-12 18:14:39] ERROR: Database error
+[2025-08-12 18:14:39] ERROR: Database error
+[2025-08-12 18:14:39] ERROR: SQLITE_ERROR: no such column: NaN
+[2025-08-12 18:14:39] ERROR: Database error
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:32:36] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:31] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: Database error
+[2025-08-12 23:35:32] ERROR: Database error
+[2025-08-12 23:35:32] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: Database error
+[2025-08-12 23:35:32] ERROR: Authentication faild
+[2025-08-12 23:35:32] ERROR: SQLITE_ERROR: no such column: NaN
+[2025-08-12 23:35:32] ERROR: Database error
+[2025-08-12 23:35:32] ERROR: Database error
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Database error
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Database error
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: Database error
+[2025-08-12 23:37:34] ERROR: Authentication faild
+[2025-08-12 23:37:34] ERROR: SQLITE_ERROR: no such column: NaN
+[2025-08-12 23:37:34] ERROR: Database error
+[2025-08-12 23:37:34] ERROR: Database error
+[2025-08-12 23:42:33] ERROR: Authentication fail
+[2025-08-12 23:42:33] ERROR: Authentication fail
+[2025-08-12 23:42:33] ERROR: Authentication fail
+[2025-08-12 23:42:33] ERROR: Authentication fail
+[2025-08-12 23:42:34] ERROR: Authentication fail
+[2025-08-12 23:42:34] ERROR: Authentication fail
+[2025-08-12 23:42:34] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:43:21] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:01] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:57] ERROR: Authentication fail
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Authentication fail
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Authentication fail
+[2025-08-12 23:44:58] ERROR: Authentication fail
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: SQLITE_ERROR: no such column: NaN
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:44:58] ERROR: Database error
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Authentication fail
+[2025-08-12 23:46:01] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Authentication fail
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Authentication fail
+[2025-08-12 23:46:02] ERROR: Authentication fail
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: SQLITE_ERROR: no such column: NaN
+[2025-08-12 23:46:02] ERROR: Database error
+[2025-08-12 23:46:02] ERROR: Database error
