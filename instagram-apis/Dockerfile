@@ -131,29 +131,26 @@
 FROM node:20 AS base
 WORKDIR /usr/src/app
 
-# copy package.json trước để cache install
+# copy package.json to install
 COPY package*.json ./
 
-# đảm bảo quyền cho user node
 RUN chown -R node:node /usr/src/app
 
 # Stage: development
 FROM base AS dev
 USER node
 
-# cài deps
 RUN npm ci
 
-# copy toàn bộ source code
 COPY --chown=node:node . .
 
 CMD ["npm", "run", "dev"]
 
 # Stage: test
 FROM base AS test
-USER node
+ENV NODE_ENV=test
 
-RUN npm ci
+RUN npm ci --include=dev
 COPY --chown=node:node . .
 
 CMD ["npm", "test"]
