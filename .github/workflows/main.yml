@@ -77,3 +77,19 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.build.outputs.digest }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          host: ${{ secrets.SERVER_HOST }} # instagramapisdemo.com
+          username: ${{ secrets.SERVER_USER }} # user-demo
+          key: ${{ secrets.SERVER_SSH_KEY }} # 12345
+          script: |
+            cd /home/${{ secrets.SERVER_USER }}/instagram-apis
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
