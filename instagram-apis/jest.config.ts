@@ -5,24 +5,26 @@ const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", {
-      tsconfig: "tsconfig.jest.json",
-      diagnostics: false
-    }]
+    "^.+\\.tsx?$": [
+      "ts-jest", {
+        tsconfig: "tsconfig.jest.json",
+        diagnostics: false
+      }
+    ]
   },
   testTimeout: 10000,
-  extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@tests/(.*)$': '<rootDir>/tests/$1',
+    '^@tests/(.*)$': '<rootDir>/tests/$1'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  transformIgnorePatterns: [
+    "node_modules/(?!.*)"
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
-    '!<rootDir>/node_modules/',
-    '!<rootDir>/path/to/dir/',
     '!<rootDir>/src/configs/',
-    '!<rootDir>/src/constant/environment.ts',
+    '!<rootDir>/src/constants/environment.ts',
   ],
   coveragePathIgnorePatterns: [
     'node_modules',
@@ -33,9 +35,10 @@ const config: Config = {
     '<rootDir>/src/app.ts',
     '<rootDir>/src/db/.*',
     '<rootDir>/src/logs/.*',
-    '<rootDir>/src/constant/environment.ts',
+    '<rootDir>/src/constants/environment.ts',
   ],
   roots: ['<rootDir>/tests'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts']
 };
 
 export default config;
