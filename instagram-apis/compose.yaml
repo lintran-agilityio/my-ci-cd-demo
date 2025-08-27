@@ -1,7 +1,7 @@
 services:
   server:
     build:
-      context: ./instagram-apis
+      context: .
       target: dev
     ports:
       - 3001:3001
