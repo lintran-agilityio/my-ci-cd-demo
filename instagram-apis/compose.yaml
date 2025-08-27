@@ -4,8 +4,8 @@ services:
       context: .
       target: dev
     ports:
-      - 3001:3001
-      - 9229:9229
+      - 80:3001
+      - 443:3001
     environment:
       NODE_ENV: development
       POSTGRES_HOST: db
