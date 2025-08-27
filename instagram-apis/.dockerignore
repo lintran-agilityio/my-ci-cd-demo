@@ -43,7 +43,7 @@ tsconfig.jest.json
 logs
 *.log
 
-# Database files (if not needed in container)
+# Database files (if not needed igit n container)
 database.sqlite
 db/database.sqlite
 

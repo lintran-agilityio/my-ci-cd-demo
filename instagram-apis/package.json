@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "NODE_ENV=test jest",
+    "test": "jest",
     "test-coverage": "NODE_ENV=test jest --coverage",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
@@ -41,6 +41,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
   }
 }
