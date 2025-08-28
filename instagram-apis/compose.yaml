@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - ./data:/usr/src/app/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "instagram"]
       interval: 10s
