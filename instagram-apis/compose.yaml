@@ -1,26 +1,60 @@
 services:
-  server:
-    build:
-      context: .
-      target: dev
-    ports:
-      - 80:3001
-      - 443:3001
+  db:
+    image: postgres:15
+    restart: always
+    secrets:
+      - db-password
     environment:
-      NODE_ENV: development
-      POSTGRES_HOST: db
-      POSTGRES_USER: postgres
+      POSTGRES_DB: instagram
       POSTGRES_PASSWORD_FILE: /run/secrets/db-password
-      POSTGRES_DB: example
+      POSTGRES_USER: instagram
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "instagram"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  server:
+    image: lintran88/instagram-apis-app:latest
+      # context: .
+      # target: prod # dev / test / prod
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://instagram:$(cat /run/secrets/db-password)@db:5432/instagram
     depends_on:
       db:
-        condition: service_healthy
-      
+        condition: service_healthy  
     secrets:
       - db-password
     volumes:
+      - ./logs:/usr/src/app/logs
+
+  dev:
+    build:
+      context: .
+      target: dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgres://instagram:$(cat /run/secrets/db-password)@db:5432/instagram
+    ports:
+      - "3002:3001"
+    volumes:
       - ./src:/usr/src/app/src
       - ./logs:/usr/src/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    secrets:
+      - db-password 
 
   test:
     build:
@@ -28,43 +62,16 @@ services:
       target: test
     environment:
       NODE_ENV: test
-      POSTGRES_HOST: db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
-      POSTGRES_DB: example
+      DATABASE_URL: postgres://instagram:$(cat /run/secrets/db-password)@db:5432/instagram
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./src:/usr/src/app/src
-      - ./tests:/usr/src/app/tests
-      - ./jest.config.ts:/usr/src/app/jest.config.ts
-      - ./jest.setup.ts:/usr/src/app/jest.setup.ts
-      - ./tsconfig.jest.json:/usr/src/app/tsconfig.jest.json
-      - ./tsconfig.json:/usr/src/app/tsconfig.json
-  db:
-    image: postgres
-    restart: always
-    user: postgres
     secrets:
       - db-password
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=example
-      - POSTGRES_PASSWORD=securepassword
-    expose:
-      - 5432
-    
-    healthcheck:
-      test: ["CMD", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+  
       
 volumes:
-  db-data:
+  db_data:
 secrets:
   db-password:
     file: db/password.txt

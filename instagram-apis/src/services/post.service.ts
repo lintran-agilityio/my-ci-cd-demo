@@ -1,6 +1,6 @@
 import { MESSAGES_VALIDATION } from '@/constants';
 import { Post } from '@/models';
-import { IPostAttributes } from '@/models/post.model';
+import { IPostAttributes } from '@/models/Post.model';
 import { findAllData } from '@/utils';
 
 class PostServices {

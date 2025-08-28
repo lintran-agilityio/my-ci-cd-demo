@@ -127,30 +127,71 @@
 # # Start application
 # CMD ["dumb-init", "node", "dist/server.js"]
 
+# ----------------------------
 # Stage: base
+# -----------------------------
 FROM node:20 AS base
 WORKDIR /usr/src/app
 
 # copy package.json to install
 COPY package*.json ./
+ENV NODE_ENV=production
 
-RUN chown -R node:node /usr/src/app
-
+# ----------------------------
 # Stage: development
+# ----------------------------
 FROM base AS dev
+ENV NODE_ENV=development
+RUN npm install
+COPY . .
+EXPOSE 3001
 USER node
-
-RUN npm ci
-
-COPY --chown=node:node . .
-
 CMD ["npm", "run", "dev"]
 
+# ----------------------------
 # Stage: test
+# ----------------------------
 FROM base AS test
 ENV NODE_ENV=test
+RUN npm install
+COPY . .
+USER node
+CMD ["npm", "run", "test"]
 
-RUN npm ci --include=dev
-COPY --chown=node:node . .
+# ----------------------------
+# Stage: build
+# ----------------------------
+FROM base AS build
+ENV NODE_ENV=development
+RUN npm ci --include-dev
+COPY . .
+RUN npm run build
 
-CMD ["npm", "test"]
+# ----------------------------
+# Stage: production-deps
+# ----------------------------
+FROM base AS production-deps
+ENV NODE_ENV=production
+RUN npm ci --omit=dev
+
+# ----------------------------
+# Stage: production
+# ----------------------------
+FROM base AS prod
+WORKDIR /usr/src/app
+ENV NODE_ENV=production
+
+# Create user no root
+RUN addgroup --system app && adduser --system --ingroup app appuser
+
+# Copy production node_modules
+COPY --from=production-deps /usr/src/app/node_modules ./node_modules
+
+# Copy compiled dist + package.json
+COPY --from=build /usr/src/app/dist ./dist
+COPY package*.json ./
+
+USER appuser
+
+EXPOSE 3001
+CMD ["node", "dist/server.js"]

@@ -33,7 +33,7 @@ app.use(globalErrorMiddleware);
 
 export const startServer = () => {
   sequelize.sync().then(() => {
-    app.listen(PORT, () => {
+    app.listen(3001, '0.0.0.0', () => {
       logger.info(`Server is running on http://localhost:${PORT}`);
     });
   });

@@ -37,7 +37,7 @@ describe('Pagination Utils', () => {
         count: mockCount,
       });
 
-      mockOmitField.mockImplementation((obj, field) => {
+      mockOmitField.mockImplementation((obj: any, field) => {
         if (field === 'email') {
           const { email, ...rest } = obj;
           return rest;
@@ -190,7 +190,7 @@ describe('Pagination Utils', () => {
       });
 
       // Mock omitField to remove password field
-      mockOmitField.mockImplementation((obj, field) => {
+      mockOmitField.mockImplementation((obj: any, field) => {
         if (field === 'password') {
           const { password, ...rest } = obj;
           return rest;
@@ -250,7 +250,7 @@ describe('Pagination Utils', () => {
         count: mockCount,
       });
 
-      mockOmitField.mockImplementation((obj) => obj);
+      mockOmitField.mockImplementation((obj: any) => obj);
 
       const result = await findAllData({
         model: mockModel,
