@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "create apis for instagram",
   "main": "index.js",
-  "type": "module",
+
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "test": "jest",
     "test-coverage": "NODE_ENV=test jest --coverage",
     "dev": "tsx watch src/server.ts",
@@ -14,6 +14,7 @@
   },
   "author": "",
   "license": "ISC",
+
   "dependencies": {
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.0",
@@ -24,7 +25,10 @@
     "sequelize": "^6.37.7",
     "sqlite3": "^5.1.7",
     "supertest": "^7.1.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "winston": "^3.17.0",
     "zod": "^4.0.10"
   },
@@ -37,10 +41,8 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.1.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
     "ts-jest": "^29.4.1",
-    "tsconfig-paths": "^4.2.0",
+    "tsc-alias": "^1.8.10",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
   }

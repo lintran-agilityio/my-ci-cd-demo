@@ -41,12 +41,8 @@
 FROM node:20-slim AS production
 WORKDIR /usr/src/app
 
-# Copy package files để cài deps production
-COPY package*.json ./
+COPY --from=build /usr/src/app/package*.json ./
+COPY --from=build /usr/src/app/dist ./dist
 RUN npm install --omit=dev
 
-# Copy dist/ từ stage build
-COPY --from=build /usr/src/app/dist ./dist
-
-# Mặc định chạy app
 CMD ["node", "dist/server.js"]

@@ -19,9 +19,9 @@ services:
       retries: 5
       start_period: 30s
   server:
-    image: lintran88/instagram-apis-app:latest
-      # context: .
-      # target: prod # dev / test / prod
+    build:
+      context: .
+      target: production # dev / test / prod
     restart: always
     ports:
       - "3001:3001"
