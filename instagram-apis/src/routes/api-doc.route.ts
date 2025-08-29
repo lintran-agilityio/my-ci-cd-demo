@@ -6,5 +6,7 @@ import { API_ENDPOINTS } from '@/constants';
 import { swaggerSpec } from '@/apiDoc/swapper';
 
 export const apiDocsRouter = (app: Application) => {
-    app.use(API_ENDPOINTS.API_DOCS, swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+  }));
 };

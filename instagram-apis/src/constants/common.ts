@@ -29,7 +29,7 @@ export const API_ENDPOINTS = {
   REGISTER: `${API_PREFIX}/auth/register`,
   LOGIN: `${API_PREFIX}/auth/login`,
   USERS: `${API_PREFIX}/users`,
-  USER_BY_ID: `${API_PREFIX}/users/:userId`,
+  USER_BY_ID: `${API_PREFIX}/users/{userId}`,
   POSTS: `${API_PREFIX}/posts`,
   POST_BY_ID: `${API_PREFIX}/posts/:id`,
   USERS_POST_ID: `${API_PREFIX}/users/:userId/post/:id`,
